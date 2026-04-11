@@ -1,0 +1,27 @@
+/* ==============================================================================
+   Plateforme Étudiants - Styles personnalisés
+   ============================================================================== */
+
+/* Variables CSS */
+:root {
+    --pe-primary: #4f46e5;
+    --pe-primary-dark: #3730a3;
+    --pe-secondary: #06b6d4;
+    --pe-bg-dark: #1e1b4b;
+}
+
+/* Styles globaux */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+/* Navbar */
+.navbar-brand {
+    font-weight: 700;
+}
