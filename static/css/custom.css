@@ -1,0 +1,517 @@
+/* ============================================================
+   ELAN DESIGN SYSTEM — CSS VARIABLES
+============================================================ */
+:root {
+  --elan-navy:      #1E3A5F;
+  --elan-blue:      #2563EB;
+  --elan-blue-light:#EFF6FF;
+  --elan-blue-mid:  #3B82F6;
+  --elan-charcoal:  #111827;
+  --font-display:   'Sora', sans-serif;
+  --font-body:      'Plus Jakarta Sans', sans-serif;
+}
+
+/* ============================================================
+   GLOBAL CONTAINER — aligns navbar + all sections to same grid
+============================================================ */
+.elan-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+/* ============================================================
+   BASE
+============================================================ */
+body {
+  font-family: var(--font-body);
+  color: #374151;
+  background: #ffffff;
+}
+
+/* ============================================================
+   NAVBAR — Elan exact spec
+   height: 54px · bg: #1E3A5F · font: Sora 700
+============================================================ */
+.navbar-elan {
+  background: var(--elan-navy);
+  height: 54px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 1px 12px rgba(0,0,0,0.15);
+}
+/* Inner container gives the same max-width as page content */
+.navbar-elan > .elan-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+}
+.navbar-elan .brand {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+.navbar-elan .brand .bi {
+  font-size: 20px;
+  color: #93C5FD;
+}
+.navbar-elan .nav-links {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+.navbar-elan .nav-link-item {
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  font-family: var(--font-body);
+  transition: color 0.15s;
+}
+.navbar-elan .nav-link-item:hover {
+  color: #fff;
+}
+.navbar-elan .nav-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.navbar-elan .btn-nav-ghost {
+  padding: 6px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.3);
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.navbar-elan .btn-nav-ghost:hover {
+  background: rgba(255,255,255,0.1);
+}
+.navbar-elan .btn-nav-solid {
+  padding: 6px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  color: var(--elan-navy);
+  background: #fff;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.navbar-elan .btn-nav-solid:hover {
+  background: #e0e7ff;
+}
+
+/* ============================================================
+   HERO SECTION
+============================================================ */
+.hero-section {
+  /* Refined 3-stop gradient — darker origin, richer depth */
+  background: linear-gradient(135deg, #0f2444 0%, #1E3A5F 40%, #2563EB 100%);
+  padding-top: 48px;
+  padding-bottom: 64px;
+  min-height: 85vh;
+  position: relative;
+  overflow: hidden;
+  color: white;
+}
+
+/* Radial glow — right side, where the card sits */
+.hero-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 80% 50%, rgba(99,155,255,0.18) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Dot grid texture — layered on top */
+.hero-section::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ensure content sits above pseudo-elements */
+.hero-section > .elan-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Trust badge ── */
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.92);
+  padding: 6px 16px;
+  border-radius: 50px;
+  font-size: 12.5px;
+  font-family: var(--font-body);
+  backdrop-filter: blur(8px);
+}
+
+/* ── Headline ── */
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.8rem, 5vw, 4rem);
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+/* Subtle variation on the accent line — white, slight dimming */
+.hero-title-accent {
+  color: rgba(255,255,255,0.88);
+  text-shadow: 0 0 40px rgba(147,197,253,0.3);
+}
+
+/* ── Description ── */
+.hero-description {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: rgba(255,255,255,0.72);
+  line-height: 1.75;
+  max-width: 480px;
+}
+
+/* ── CTA buttons ── */
+.btn-hero-primary {
+  display: inline-flex;
+  align-items: center;
+  background: #ffffff;
+  color: #0f2444;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 13px 26px;
+  border-radius: 10px;
+  text-decoration: none;
+  border: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-hero-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.28);
+  color: #0f2444;
+}
+.btn-hero-secondary {
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 13px 26px;
+  border-radius: 10px;
+  text-decoration: none;
+  border: 1.5px solid rgba(255,255,255,0.35);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.btn-hero-secondary:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: white;
+  color: white;
+}
+
+/* ── Floating stats card ── */
+.hero-card {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.14);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 20px;
+  padding: 28px;
+  width: 100%;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.3);
+  /* No tilt — flat and clean */
+}
+.hero-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.hero-card-header .brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: #fff;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+}
+.hero-card-header .brand .bi { color: #93C5FD; }
+
+.hero-live-badge {
+  background: #4ADE80;
+  color: #14532D;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 50px;
+  letter-spacing: 0.05em;
+}
+.hero-stat-box {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 18px 14px;
+  text-align: center;
+}
+.hero-stat-number {
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #93C5FD;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.hero-stat-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  font-family: var(--font-body);
+}
+.hero-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.82);
+  font-family: var(--font-body);
+}
+.hero-check {
+  color: #4ADE80;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   TRUST PILLS
+============================================================ */
+.trust-section {
+  background: var(--elan-blue-light);
+  border-bottom: 1px solid #dbeafe;
+}
+.trust-pill {
+  display: inline-flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #dbeafe;
+  color: var(--elan-navy);
+  padding: 6px 16px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+.trust-pill .bi {
+  color: var(--elan-blue);
+}
+
+/* ============================================================
+   SERVICES SECTION
+============================================================ */
+.services-section {
+  background: #ffffff;
+}
+.py-6 { padding-top: 5rem; padding-bottom: 5rem; }
+
+.service-card {
+  border: 1px solid #e5e7eb;
+  border-top: 3px solid var(--elan-navy);
+  border-radius: 12px;
+  padding: 28px 24px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.service-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(37,99,235,0.12);
+}
+.service-icon-wrap {
+  width: 52px;
+  height: 52px;
+  background: var(--elan-blue-light);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.service-icon-wrap .bi {
+  font-size: 24px;
+  color: var(--elan-blue);
+}
+
+/* ============================================================
+   HOW IT WORKS
+============================================================ */
+.step-number {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--elan-blue);
+  opacity: 0.3;
+  line-height: 1;
+}
+
+/* ============================================================
+   CTA SECTION
+============================================================ */
+.cta-section {
+  background: var(--elan-navy);
+  color: white;
+}
+.cta-icon {
+  font-size: 3rem;
+  color: #93C5FD;
+}
+
+/* ============================================================
+   FOOTER
+============================================================ */
+.footer-elan {
+  background: var(--elan-charcoal);
+  color: #9CA3AF;
+  padding: 60px 0 0;
+}
+.footer-elan .brand {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.footer-elan .brand .bi {
+  color: #93C5FD;
+}
+.footer-link {
+  color: #9CA3AF;
+  text-decoration: none;
+  font-size: 14px;
+  font-family: var(--font-body);
+  transition: color 0.15s;
+}
+.footer-link:hover { color: #fff; }
+.footer-social {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9CA3AF;
+  text-decoration: none;
+  font-size: 16px;
+  transition: background 0.15s, color 0.15s;
+}
+.footer-social:hover {
+  background: var(--elan-blue);
+  color: #fff;
+  border-color: var(--elan-blue);
+}
+.footer-bottom {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 20px 0;
+  text-align: center;
+  font-size: 13px;
+  color: #6B7280;
+  margin-top: 20px;
+}
+
+/* ============================================================
+   ELAN ALERT COMPONENTS — from design system
+============================================================ */
+.alert-info-elan {
+  background: #EFF6FF; color: #1E40AF;
+  border-left: 3px solid var(--elan-blue);
+  border-radius: 8px; padding: 10px 14px;
+  font-size: 13px; display: flex; align-items: center; gap: 8px;
+}
+.alert-success-elan {
+  background: #F0FDF4; color: #166534;
+  border-left: 3px solid #16A34A;
+  border-radius: 8px; padding: 10px 14px;
+  font-size: 13px; display: flex; align-items: center; gap: 8px;
+}
+.alert-warning-elan {
+  background: #FFFBEB; color: #92400E;
+  border-left: 3px solid #F59E0B;
+  border-radius: 8px; padding: 10px 14px;
+  font-size: 13px; display: flex; align-items: center; gap: 8px;
+}
+.alert-danger-elan {
+  background: #FEF2F2; color: #991B1B;
+  border-left: 3px solid #DC2626;
+  border-radius: 8px; padding: 10px 14px;
+  font-size: 13px; display: flex; align-items: center; gap: 8px;
+}
+
+/* ============================================================
+   TYPOGRAPHY — Elan design system
+============================================================ */
+.t-display { font-family: var(--font-display); font-size: 30px; font-weight: 700; color: var(--elan-navy); line-height: 1.1; }
+.t-h1     { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--elan-navy); }
+.t-h2     { font-family: var(--font-display); font-size: 17px; font-weight: 600; color: var(--elan-navy); }
+.t-h3     { font-family: var(--font-body);    font-size: 15px; font-weight: 600; color: #111; }
+.t-body   { font-family: var(--font-body);    font-size: 14px; color: #374151; line-height: 1.6; }
+.t-muted  { font-family: var(--font-body);    font-size: 13px; color: #6b7280; }
+.t-label  { font-family: var(--font-body);    font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: #9ca3af; }
+
+/* ============================================================
+   ELAN BUTTON SYSTEM
+============================================================ */
+.btn-navy        { background: var(--elan-navy); color: #fff; border: none; }
+.btn-navy:hover  { background: #16304f; color: #fff; }
+.btn-elan        { background: var(--elan-blue); color: #fff; border: none; }
+.btn-elan:hover  { background: #1d4ed8; color: #fff; }
+.btn-ghost-blue  { background: var(--elan-blue-light); color: var(--elan-blue); border: none; }
+.btn-ghost-blue:hover { background: #dbeafe; color: #1d4ed8; }
+.btn-outline-navy { background: transparent; color: var(--elan-navy); border: 1.5px solid var(--elan-navy); }
+.btn-outline-navy:hover { background: var(--elan-navy); color: #fff; }
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media (max-width: 991px) {
+  /* Columns stack: text on top, card below */
+  .hero-title   { font-size: 2.4rem; }
+  .hero-card    { max-width: 100%; margin-top: 40px; }
+  .py-6         { padding-top: 3.5rem; padding-bottom: 3.5rem; }
+  .navbar-elan .nav-links { display: none !important; }
+}
+@media (max-width: 576px) {
+  .hero-title   { font-size: 1.9rem; }
+  .hero-section { padding-top: 36px; padding-bottom: 48px; }
+  .hero-buttons { flex-direction: column; }
+  .hero-buttons .btn-hero-primary,
+  .hero-buttons .btn-hero-secondary { width: 100%; justify-content: center; }
+  .hero-card    { padding: 20px; }
+}
