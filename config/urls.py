@@ -10,6 +10,9 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
 
+    # Built-in auth views — provides url names: login, logout, password_*
+    path('accounts/', include('django.contrib.auth.urls')),
+
     # Local apps
     path('', include('core.urls')),
     path('housing/', include('housing.urls')),
