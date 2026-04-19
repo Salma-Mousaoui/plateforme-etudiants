@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Profile — Elan{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:860px;">
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION 1 — PROFILE HEADER
+       ═══════════════════════════════════════════════════════ -->
+  <div class="card border-0 shadow-sm mb-4" style="border-radius:16px;">
+    <div class="card-body p-4">
+      <div class="d-flex align-items-center gap-4 flex-wrap">
+
+        <!-- Avatar or photo -->
+        {% if user.photo %}
+          <img src="{{ user.photo.url }}"
+               class="rounded-circle object-fit-cover"
+               style="width:80px; height:80px;"
+               alt="Profile photo">
+        {% else %}
+          <div class="rounded-circle d-flex align-items-center justify-content-center
+                      fw-bold fs-4 text-white"
+               style="width:80px; height:80px; background:#1E3A5F; flex-shrink:0;">
+            {{ user.first_name.0|upper }}{{ user.last_name.0|upper }}
+          </div>
+        {% endif %}
+
+        <div>
+          <!-- Full name -->
+          <h2 class="fw-bold text-navy mb-1">{{ user.get_full_name }}</h2>
+          <!-- Email -->
+          <p class="text-muted small mb-2">
+            <i class="bi bi-envelope me-1"></i>{{ user.email }}
+          </p>
+
+          <!-- Role badge -->
+          {% if user.role == "student" %}
+            <span class="badge bg-primary me-1">Student</span>
+          {% elif user.role == "lawyer" %}
+            <span class="badge bg-dark me-1">Lawyer</span>
+          {% elif user.role == "orientation" %}
+            <span class="badge bg-info text-dark me-1">Academic Advisor</span>
+          {% elif user.role == "housing" %}
+            <span class="badge bg-secondary me-1">Landlord</span>
+          {% elif user.role == "admin" %}
+            <span class="badge bg-danger me-1">Admin</span>
+          {% endif %}
+
+          <!-- Account status badge -->
+          {% if user.role == "student" or user.is_validated %}
+            <span class="badge bg-success">
+              <i class="bi bi-check-circle me-1"></i>Active account
+            </span>
+          {% else %}
+            <span class="badge bg-warning text-dark">
+              <i class="bi bi-clock me-1"></i>Pending validation
+            </span>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION 2 — ACCOUNT DETAILS
+       ═══════════════════════════════════════════════════════ -->
+  <div class="card border-0 shadow-sm mb-4" style="border-radius:16px;">
+    <div class="card-body p-4">
+      <h5 class="fw-bold text-navy mb-3">
+        <i class="bi bi-person-lines-fill me-2"></i>Account details
+      </h5>
+      <table class="table table-borderless mb-0">
+        <tbody>
+          <tr>
+            <td class="text-muted fw-semibold" style="width:160px;">Role</td>
+            <td>{{ user.get_role_display }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted fw-semibold">City</td>
+            <td>{{ user.city|default:"—" }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted fw-semibold">Phone</td>
+            <td>{{ user.phone|default:"—" }}</td>
+          </tr>
+          <tr>
+            <td class="text-muted fw-semibold">Member since</td>
+            <td>{{ user.date_joined|date:"F j, Y" }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SECTION 3 — EDIT PROFILE FORM
+       ═══════════════════════════════════════════════════════ -->
+  <div class="card border-0 shadow-sm" style="border-radius:16px;">
+    <div class="card-body p-4">
+      <h5 class="fw-bold text-navy mb-4">
+        <i class="bi bi-pencil-square me-2"></i>Edit profile
+      </h5>
+
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <!-- Profile photo -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Profile photo</label>
+          <input type="file" name="photo" accept="image/*" class="form-control">
+          {% if user.photo %}
+            <div class="form-text">
+              <i class="bi bi-check-circle text-success me-1"></i>A photo is already set.
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- City + Phone -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">City</label>
+            <input type="text" name="city" value="{{ user.city }}"
+                   class="form-control" placeholder="e.g. Madrid">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Phone</label>
+            <input type="tel" name="phone" value="{{ user.phone }}"
+                   class="form-control" placeholder="+34 ...">
+          </div>
+        </div>
+
+        <!-- Professional details (lawyers + orientation advisors only) -->
+        {% if user.role == "lawyer" or user.role == "orientation" %}
+          <hr class="my-3">
+          <h6 class="fw-bold text-navy mb-3">
+            <i class="bi bi-briefcase me-1"></i>Professional details
+          </h6>
+          {% if pro_form %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Bio / Service description</label>
+              {{ pro_form.bio }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Speciality</label>
+              {{ pro_form.speciality }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Languages spoken</label>
+              {{ pro_form.languages }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Website / LinkedIn</label>
+              {{ pro_form.website }}
+            </div>
+          {% endif %}
+        {% endif %}
+
+        <!-- Save button -->
+        <div class="mt-2">
+          <button type="submit" class="btn btn-navy px-4 py-2 fw-semibold">
+            <i class="bi bi-save me-1"></i>Save changes
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

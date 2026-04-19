@@ -111,11 +111,11 @@ AUTH_PASSWORD_VALIDATORS = [
 # INTERNATIONALIZATION
 # ==============================================================================
 
-LANGUAGE_CODE = 'fr-fr'
+LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'Europe/Paris'
 
-USE_I18N = True
+USE_I18N = False
 
 USE_TZ = True
 
@@ -151,8 +151,19 @@ CHANNEL_LAYERS = {
 # AUTHENTICATION
 # ==============================================================================
 
+LOGIN_URL             = '/login/'
+LOGIN_REDIRECT_URL    = '/'
+LOGOUT_REDIRECT_URL   = '/'
+
+# Authentification par email au lieu de username
+AUTHENTICATION_BACKENDS = [
+    'core.backends.EmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
 
 # ==============================================================================
 # DEFAULT AUTO FIELD
