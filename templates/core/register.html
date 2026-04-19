@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Create Account — Elan{% endblock %}
+
+{% block extra_css %}
+<style>
+  .role-card.selected {
+    border-color: #2563EB !important;
+    background-color: #EFF6FF !important;
+  }
+  .role-card:hover:not(.selected) {
+    border-color: #93C5FD !important;
+    background-color: #F8FAFC !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:580px; margin:0 auto; padding:48px 16px 80px;">
+
+  <!-- Title -->
+  <h1 class="fw-bold text-navy fs-2">Create your account</h1>
+  <p class="text-muted">Join the student community</p>
+
+  <!-- Role selector -->
+  <p class="fw-semibold mb-2 text-navy">I am a...</p>
+  <div class="row g-2 mb-4" id="role-cards">
+
+    <div class="col-6 col-md-3">
+      <div class="card role-card text-center p-3 h-100"
+           data-role="student"
+           style="border:2px solid #dee2e6; border-radius:12px; cursor:pointer;
+                  transition: all 0.2s ease;">
+        <i class="bi bi-mortarboard-fill fs-2 text-navy mb-1"></i>
+        <small class="fw-semibold">Student</small>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card role-card text-center p-3 h-100"
+           data-role="lawyer"
+           style="border:2px solid #dee2e6; border-radius:12px; cursor:pointer;
+                  transition: all 0.2s ease;">
+        <i class="bi bi-briefcase-fill fs-2 text-navy mb-1"></i>
+        <small class="fw-semibold">Lawyer</small>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card role-card text-center p-3 h-100"
+           data-role="orientation"
+           style="border:2px solid #dee2e6; border-radius:12px; cursor:pointer;
+                  transition: all 0.2s ease;">
+        <i class="bi bi-compass-fill fs-2 text-navy mb-1"></i>
+        <small class="fw-semibold">Academic Advisor</small>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card role-card text-center p-3 h-100"
+           data-role="housing"
+           style="border:2px solid #dee2e6; border-radius:12px; cursor:pointer;
+                  transition: all 0.2s ease;">
+        <i class="bi bi-house-fill fs-2 text-navy mb-1"></i>
+        <small class="fw-semibold">Landlord</small>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Registration form -->
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    <!-- Hidden role select (synced by JS) -->
+    {{ form.role }}
+
+    <!-- Non-field errors -->
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger small">
+        {% for error in form.non_field_errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Row 1: First name + Last name -->
+    <div class="row g-3 mb-3">
+      <div class="col-6">
+        <label class="form-label fw-semibold">First name *</label>
+        {{ form.first_name }}
+        {% if form.first_name.errors %}
+          <div class="text-danger small mt-1">
+            {% for e in form.first_name.errors %}{{ e }}{% endfor %}
+          </div>
+        {% endif %}
+      </div>
+      <div class="col-6">
+        <label class="form-label fw-semibold">Last name *</label>
+        {{ form.last_name }}
+        {% if form.last_name.errors %}
+          <div class="text-danger small mt-1">
+            {% for e in form.last_name.errors %}{{ e }}{% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Row 2: Email -->
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Email address *</label>
+      {{ form.email }}
+      {% if form.email.errors %}
+        <div class="text-danger small mt-1">
+          {% for e in form.email.errors %}{{ e }}{% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Row 3: City -->
+    <div class="mb-3">
+      <label class="form-label fw-semibold">City in Spain (optional)</label>
+      {{ form.city }}
+      <div class="form-text">Where will you be studying or working?</div>
+    </div>
+
+    <!-- Row 4: Password -->
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Password *</label>
+      {{ form.password1 }}
+      {% if form.password1.errors %}
+        <div class="text-danger small mt-1">
+          {% for e in form.password1.errors %}{{ e }}{% endfor %}
+        </div>
+      {% endif %}
+      <div class="form-text">Minimum 8 characters.</div>
+    </div>
+
+    <!-- Row 5: Confirm password -->
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Confirm password *</label>
+      {{ form.password2 }}
+      {% if form.password2.errors %}
+        <div class="text-danger small mt-1">
+          {% for e in form.password2.errors %}{{ e }}{% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Submit -->
+    <button type="submit" class="btn btn-navy w-100 py-2 fw-semibold mt-2">
+      Create my account
+    </button>
+
+  </form>
+
+  <!-- Link to login -->
+  <p class="text-center mt-3 text-muted">
+    Already have an account?
+    <a href="{% url 'login' %}" class="text-navy fw-semibold">Sign in</a>
+  </p>
+
+  <!-- Pro info note -->
+  <div class="alert alert-info small mt-3">
+    <i class="bi bi-info-circle me-1"></i>
+    <strong>Lawyers, advisors and landlords</strong> —
+    your account will be reviewed and activated within 24–48 hours.
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const cards = document.querySelectorAll(".role-card");
+  const roleSelect = document.getElementById("id_role");
+
+  function selectRole(roleValue) {
+    cards.forEach(function(card) {
+      card.classList.remove("selected");
+      if (card.dataset.role === roleValue) {
+        card.classList.add("selected");
+      }
+    });
+    if (roleSelect) roleSelect.value = roleValue;
+  }
+
+  // Initialize with current select value or "student" by default
+  selectRole(roleSelect ? roleSelect.value || "student" : "student");
+
+  cards.forEach(function(card) {
+    card.addEventListener("click", function() {
+      selectRole(this.dataset.role);
+    });
+  });
+});
+</script>
+{% endblock %}
