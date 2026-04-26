@@ -1,0 +1,123 @@
+{% extends "dashboard/base_admin.html" %}
+
+{% block title %}Report #{{ report.id }} | Elan Admin{% endblock %}
+{% block page_title %}Report #{{ report.id }}{% endblock %}
+
+{% block admin_content %}
+
+<div class="d-flex gap-2 mb-3">
+  <a href="{% url 'dashboard-reports' %}" class="btn btn-sm btn-outline-secondary" style="border-radius:6px;">← Back to Reports</a>
+</div>
+
+<div class="two-col-grid">
+
+  <!-- Report Info -->
+  <div class="admin-card">
+    <div class="admin-card-header"><h2 class="admin-card-title">Report Details</h2></div>
+    <div class="detail-list">
+      <div class="detail-row">
+        <span class="detail-label">Type</span>
+        <span>
+          {% if report.listing %}
+            <span class="badge badge-info">Listing</span>
+          {% elif report.reported_user %}
+            <span class="badge" style="background:#EDE9FE;color:#5B21B6;">Professional</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="detail-row"><span class="detail-label">Reason</span><span>{{ report.get_reason_display }}</span></div>
+      <div class="detail-row">
+        <span class="detail-label">Reported By</span>
+        <span>
+          {{ report.reporter.get_full_name|default:report.reporter.email }}
+          <a href="{% url 'dashboard-user-detail' report.reporter.id %}" class="ms-1 btn-action btn-view" style="font-size:11px;">Profile</a>
+        </span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Status</span>
+        <span>
+          {% if report.status == "pending" %}
+            <span class="badge badge-warning">Pending</span>
+          {% else %}
+            <span class="badge badge-success">Resolved</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="detail-row"><span class="detail-label">Date</span><span>{{ report.created_at|date:"d M Y, H:i" }}</span></div>
+
+      {% if report.listing %}
+      <div class="detail-row">
+        <span class="detail-label">Reported Listing</span>
+        <span>
+          {{ report.listing.title }}
+          <a href="{% url 'dashboard-listing-detail' report.listing.pk %}" class="ms-1 btn-action btn-view" style="font-size:11px;">View</a>
+        </span>
+      </div>
+      {% endif %}
+
+      {% if report.reported_user %}
+      <div class="detail-row">
+        <span class="detail-label">Reported User</span>
+        <span>
+          {{ report.reported_user.get_full_name|default:report.reported_user.email }}
+          <a href="{% url 'dashboard-user-detail' report.reported_user.id %}" class="ms-1 btn-action btn-view" style="font-size:11px;">Profile</a>
+        </span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="admin-card">
+    <div class="admin-card-header"><h2 class="admin-card-title">Admin Actions</h2></div>
+    <div class="p-4 d-flex flex-column gap-2">
+
+      {% if report.status == "pending" %}
+        <form method="post" action="{% url 'resolve-report' report.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-success btn-sm w-100" style="border-radius:6px;">
+            <i class="bi bi-check-circle me-1"></i> Mark as Resolved
+          </button>
+        </form>
+      {% endif %}
+
+      <button type="button" class="btn btn-warning btn-sm w-100" style="border-radius:6px;"
+              data-bs-toggle="modal" data-bs-target="#removeContentModal">
+        <i class="bi bi-slash-circle me-1"></i> Remove Reported Content
+      </button>
+
+    </div>
+  </div>
+</div>
+
+<!-- Admin Notes -->
+<div class="admin-card mt-4">
+  <div class="admin-card-header"><h2 class="admin-card-title">Admin Notes</h2></div>
+  <div class="p-4">
+    <textarea class="form-control" rows="4" placeholder="Internal notes about this report…" style="border-radius:8px;font-size:13px;"></textarea>
+    <p class="mt-2" style="font-size:12px;color:#9CA3AF;">Notes are for internal use only and are not saved in the current implementation.</p>
+  </div>
+</div>
+
+<!-- Remove Content Modal -->
+<div class="modal fade" id="removeContentModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Remove Reported Content</h5></div>
+      <div class="modal-body">
+        This will deactivate the reported
+        {% if report.listing %}listing <strong>{{ report.listing.title }}</strong>{% elif report.reported_user %}user <strong>{{ report.reported_user.get_full_name }}</strong>{% endif %}
+        and mark this report as resolved.
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <form method="post" action="{% url 'remove-reported-content' report.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger btn-sm">Confirm</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

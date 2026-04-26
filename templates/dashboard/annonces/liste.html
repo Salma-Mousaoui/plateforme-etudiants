@@ -1,0 +1,127 @@
+{% extends "dashboard/base_admin.html" %}
+
+{% block title %}Housing Listings | Elan Admin{% endblock %}
+{% block page_title %}Housing Listings{% endblock %}
+
+{% block admin_content %}
+
+<!-- Filters -->
+<form method="get" class="filter-bar mb-4">
+  <select name="statut" class="form-select form-select-sm" style="max-width:160px;">
+    <option value="">All Status</option>
+    <option value="pending" {% if statut == "pending" %}selected{% endif %}>Pending</option>
+    <option value="approved" {% if statut == "approved" %}selected{% endif %}>Approved</option>
+    <option value="rejected" {% if statut == "rejected" %}selected{% endif %}>Rejected</option>
+  </select>
+  <select name="city" class="form-select form-select-sm" style="max-width:160px;">
+    <option value="">All Cities</option>
+    {% for c in cities %}
+      <option value="{{ c }}" {% if city == c %}selected{% endif %}>{{ c }}</option>
+    {% endfor %}
+  </select>
+  <select name="type" class="form-select form-select-sm" style="max-width:160px;">
+    <option value="">All Types</option>
+    <option value="chambre" {% if listing_type == "chambre" %}selected{% endif %}>Room</option>
+    <option value="appartement" {% if listing_type == "appartement" %}selected{% endif %}>Apartment</option>
+    <option value="colocation" {% if listing_type == "colocation" %}selected{% endif %}>Shared Housing</option>
+  </select>
+  <button type="submit" class="btn btn-sm btn-primary" style="border-radius:6px;">Filter</button>
+  <a href="{% url 'dashboard-listings' %}" class="btn btn-sm btn-outline-secondary" style="border-radius:6px;">Reset</a>
+</form>
+
+<div class="admin-card">
+  <div class="admin-card-header">
+    <h2 class="admin-card-title">{{ listings.paginator.count }} listing{{ listings.paginator.count|pluralize }}</h2>
+  </div>
+
+  {% if listings %}
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Title</th><th>Owner</th><th>Type</th><th>City</th>
+        <th>Price</th><th>Status</th><th>Date</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for listing in listings %}
+      <tr>
+        <td>{{ listing.title|truncatechars:35 }}</td>
+        <td>{{ listing.owner.get_full_name|default:listing.owner.email }}</td>
+        <td>
+          {% if listing.type == "chambre" %}Room
+          {% elif listing.type == "appartement" %}Apartment
+          {% else %}Shared Housing{% endif %}
+        </td>
+        <td>{{ listing.city }}</td>
+        <td>€{{ listing.price }}</td>
+        <td>
+          {% if listing.is_approved and listing.is_active %}
+            <span class="badge badge-success">Approved</span>
+          {% elif listing.is_active %}
+            <span class="badge badge-warning">Pending</span>
+          {% else %}
+            <span class="badge badge-gray">Inactive</span>
+          {% endif %}
+        </td>
+        <td>{{ listing.created_at|date:"d M Y" }}</td>
+        <td>
+          <div class="d-flex gap-1 flex-wrap">
+            <a href="{% url 'dashboard-listing-detail' listing.pk %}" class="btn-action btn-view">View</a>
+            {% if not listing.is_approved %}
+              <form method="post" action="{% url 'validate-listing' listing.pk %}" class="d-inline">
+                {% csrf_token %}<button type="submit" class="btn-action btn-validate">Approve</button>
+              </form>
+            {% endif %}
+            {% if listing.is_active %}
+              <form method="post" action="{% url 'reject-listing' listing.pk %}" class="d-inline">
+                {% csrf_token %}<button type="submit" class="btn-action btn-reject">Reject</button>
+              </form>
+            {% endif %}
+            <button type="button" class="btn-action btn-reject"
+                    data-bs-toggle="modal" data-bs-target="#deleteListingModal{{ listing.pk }}">
+              Delete
+            </button>
+          </div>
+        </td>
+      </tr>
+
+      <!-- Delete Listing Modal -->
+      <div class="modal fade" id="deleteListingModal{{ listing.pk }}" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Delete Listing</h5></div>
+            <div class="modal-body"><strong>Irreversible.</strong> Delete listing <strong>{{ listing.title }}</strong>?</div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+              <form method="post" action="{% url 'delete-listing' listing.pk %}">
+                {% csrf_token %}<button type="submit" class="btn btn-danger btn-sm">Delete</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if listings.has_other_pages %}
+  <div class="d-flex justify-content-center gap-2 py-3">
+    {% if listings.has_previous %}
+      <a href="?page={{ listings.previous_page_number }}&statut={{ statut }}&city={{ city }}&type={{ listing_type }}"
+         class="btn btn-sm btn-outline-secondary">← Prev</a>
+    {% endif %}
+    <span class="btn btn-sm btn-primary disabled" style="background:#1D4ED8;border-color:#1D4ED8;">
+      {{ listings.number }} / {{ listings.paginator.num_pages }}
+    </span>
+    {% if listings.has_next %}
+      <a href="?page={{ listings.next_page_number }}&statut={{ statut }}&city={{ city }}&type={{ listing_type }}"
+         class="btn btn-sm btn-outline-secondary">Next →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="p-4 text-center" style="color:#6B7280;">No listings found.</div>
+  {% endif %}
+</div>
+{% endblock %}

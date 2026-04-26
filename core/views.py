@@ -26,8 +26,22 @@ User = get_user_model()
 # LandingView — public homepage
 # ==============================================================================
 
+def _role_dashboard_url(role):
+    """Return the redirect URL name for a given user role."""
+    if role == "admin":
+        return "dashboard"
+    if role in ("lawyer", "orientation"):
+        return "professionals"
+    return "housing"  # student and housing landlord
+
+
 class LandingView(TemplateView):
     template_name = "core/landing.html"
+
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect(_role_dashboard_url(request.user.role))
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -36,24 +50,28 @@ class LandingView(TemplateView):
             {
                 "icon":        "building",
                 "title":       "Housing",
+                "anchor":      "housing",
                 "description": "Find verified rooms and apartments in Spain",
                 "url":         "/housing/",
             },
             {
                 "icon":        "journal-text",
                 "title":       "Counselors",
+                "anchor":      "counselors",
                 "description": "University and academic degree advice",
-                "url":         "/counselors/",
+                "url":         "/professionals/",
             },
             {
                 "icon":        "briefcase",
                 "title":       "Lawyers",
+                "anchor":      "lawyers",
                 "description": "Immigration lawyers, certified and verified",
-                "url":         "/lawyers/",
+                "url":         "/professionals/",
             },
             {
                 "icon":        "chat-dots",
                 "title":       "Community",
+                "anchor":      "community",
                 "description": "Chat with Moroccan students across Spain",
                 "url":         "/chat/",
             },
@@ -100,7 +118,7 @@ class RegisterView(View):
                     request,
                     f"Welcome, {user.get_full_name()}! Your account has been created.",
                 )
-            return redirect("landing")
+            return redirect(_role_dashboard_url(user.role))
 
         return render(request, "core/register.html", {"form": form})
 
@@ -121,7 +139,8 @@ class CustomLoginView(DjangoLoginView):
         return super().get(request, *args, **kwargs)
 
     def get_success_url(self):
-        return "/"
+        from django.urls import reverse
+        return reverse(_role_dashboard_url(self.request.user.role))
 
     def form_invalid(self, form):
         messages.error(self.request, "Incorrect email or password.")

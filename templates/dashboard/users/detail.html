@@ -1,0 +1,221 @@
+{% extends "dashboard/base_admin.html" %}
+
+{% block title %}{{ target_user.get_full_name|default:target_user.email }} | Elan Admin{% endblock %}
+{% block page_title %}{{ target_user.get_full_name|default:target_user.email }}{% endblock %}
+
+{% block admin_content %}
+
+<div class="d-flex gap-2 mb-3">
+  <a href="{% url 'dashboard-users' %}" class="btn btn-sm btn-outline-secondary" style="border-radius:6px;">
+    ← Back to Users
+  </a>
+</div>
+
+<div class="two-col-grid" style="grid-template-columns:1fr 1fr;">
+
+  <!-- User Info -->
+  <div class="admin-card">
+    <div class="admin-card-header"><h2 class="admin-card-title">Account Information</h2></div>
+    <div class="detail-list">
+      <div class="detail-row">
+        <span class="detail-label">Full Name</span>
+        <span>{{ target_user.get_full_name|default:"—" }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Email</span>
+        <span>{{ target_user.email }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Username</span>
+        <span>{{ target_user.username }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Role</span>
+        <span>
+          {% if target_user.role == "admin" %}
+            <span class="badge badge-danger">Admin</span>
+          {% elif target_user.role == "lawyer" %}
+            <span class="badge badge-info">Lawyer</span>
+          {% elif target_user.role == "orientation" %}
+            <span class="badge badge-info">Counselor</span>
+          {% elif target_user.role == "housing" %}
+            <span class="badge badge-info">Landlord</span>
+          {% else %}
+            <span class="badge badge-gray">Student</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Status</span>
+        <span>
+          {% if target_user.is_active and target_user.is_validated %}
+            <span class="badge badge-success">Active &amp; Validated</span>
+          {% elif target_user.is_active and not target_user.is_validated %}
+            <span class="badge badge-warning">Active — Pending validation</span>
+          {% else %}
+            <span class="badge badge-gray">Inactive</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">City</span>
+        <span>{{ target_user.city|default:"—" }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Phone</span>
+        <span>{{ target_user.phone|default:"—" }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Registered</span>
+        <span>{{ target_user.date_joined|date:"d M Y, H:i" }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Last Login</span>
+        <span>{{ target_user.last_login|date:"d M Y, H:i"|default:"Never" }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="admin-card">
+    <div class="admin-card-header"><h2 class="admin-card-title">Admin Actions</h2></div>
+    <div class="p-4 d-flex flex-column gap-2">
+
+      {% if not target_user.is_validated and target_user.is_pro %}
+        <form method="post" action="{% url 'validate-user' target_user.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-success btn-sm w-100" style="border-radius:6px;">
+            <i class="bi bi-check-circle me-1"></i> Validate Account
+          </button>
+        </form>
+      {% endif %}
+
+      {% if target_user.is_active %}
+        <button type="button" class="btn btn-warning btn-sm w-100" style="border-radius:6px;"
+                data-bs-toggle="modal" data-bs-target="#disableModal">
+          <i class="bi bi-person-dash me-1"></i> Disable Account
+        </button>
+      {% else %}
+        <form method="post" action="{% url 'activate-user' target_user.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-success btn-sm w-100" style="border-radius:6px;">
+            <i class="bi bi-person-check me-1"></i> Enable Account
+          </button>
+        </form>
+      {% endif %}
+
+      {% if target_user.role != "admin" %}
+        <button type="button" class="btn btn-danger btn-sm w-100" style="border-radius:6px;"
+                data-bs-toggle="modal" data-bs-target="#deleteModal">
+          <i class="bi bi-trash me-1"></i> Delete Account
+        </button>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Professional Profile -->
+{% if pro_profile %}
+<div class="admin-card mt-4">
+  <div class="admin-card-header"><h2 class="admin-card-title">Professional Profile</h2></div>
+  <div class="detail-list">
+    <div class="detail-row"><span class="detail-label">Speciality</span><span>{{ pro_profile.speciality|default:"—" }}</span></div>
+    <div class="detail-row"><span class="detail-label">Languages</span><span>{{ pro_profile.languages|default:"—" }}</span></div>
+    <div class="detail-row"><span class="detail-label">Website</span><span>{{ pro_profile.website|default:"—" }}</span></div>
+    <div class="detail-row"><span class="detail-label">Bio</span><span>{{ pro_profile.bio|default:"—" }}</span></div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Listings -->
+{% if listings %}
+<div class="admin-card mt-4">
+  <div class="admin-card-header"><h2 class="admin-card-title">Housing Listings ({{ listings.count }})</h2></div>
+  <table class="admin-table">
+    <thead><tr><th>Title</th><th>City</th><th>Price</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for listing in listings %}
+      <tr>
+        <td>{{ listing.title|truncatechars:40 }}</td>
+        <td>{{ listing.city }}</td>
+        <td>€{{ listing.price }}</td>
+        <td>
+          {% if listing.is_approved and listing.is_active %}
+            <span class="badge badge-success">Approved</span>
+          {% elif listing.is_active %}
+            <span class="badge badge-warning">Pending</span>
+          {% else %}
+            <span class="badge badge-gray">Inactive</span>
+          {% endif %}
+        </td>
+        <td>{{ listing.created_at|date:"d M Y" }}</td>
+        <td><a href="{% url 'dashboard-listing-detail' listing.pk %}" class="btn-action btn-view">View</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- Reports Received -->
+{% if reports_received %}
+<div class="admin-card mt-4">
+  <div class="admin-card-header"><h2 class="admin-card-title">Reports Received ({{ reports_received.count }})</h2></div>
+  <table class="admin-table">
+    <thead><tr><th>Reason</th><th>Reported By</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for report in reports_received %}
+      <tr>
+        <td>{{ report.get_reason_display }}</td>
+        <td>{{ report.reporter.get_full_name|default:report.reporter.email }}</td>
+        <td>
+          {% if report.status == "pending" %}
+            <span class="badge badge-warning">Pending</span>
+          {% else %}
+            <span class="badge badge-success">Resolved</span>
+          {% endif %}
+        </td>
+        <td>{{ report.created_at|date:"d M Y" }}</td>
+        <td><a href="{% url 'dashboard-report-detail' report.pk %}" class="btn-action btn-view">View</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- Disable Modal -->
+<div class="modal fade" id="disableModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Disable Account</h5></div>
+      <div class="modal-body">Disable account of <strong>{{ target_user.get_full_name }}</strong>? They won't be able to log in.</div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <form method="post" action="{% url 'deactivate-user' target_user.id %}">
+          {% csrf_token %}<button type="submit" class="btn btn-warning btn-sm">Disable</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Delete Account</h5></div>
+      <div class="modal-body"><strong>This action is irreversible.</strong> Delete <strong>{{ target_user.get_full_name }}</strong> permanently?</div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <form method="post" action="{% url 'delete-user' target_user.id %}">
+          {% csrf_token %}<button type="submit" class="btn btn-danger btn-sm">Delete permanently</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

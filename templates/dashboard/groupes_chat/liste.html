@@ -1,0 +1,114 @@
+{% extends "dashboard/base_admin.html" %}
+
+{% block title %}Chat Groups | Elan Admin{% endblock %}
+{% block page_title %}Chat Groups{% endblock %}
+
+{% block admin_content %}
+
+<!-- Create Group -->
+<div class="admin-card mb-4">
+  <div class="admin-card-header"><h2 class="admin-card-title">Create New Group</h2></div>
+  <div class="p-4">
+    <form method="post" action="{% url 'create-group' %}" class="d-flex gap-3 align-items-end flex-wrap">
+      {% csrf_token %}
+      <div>
+        <label class="form-label" style="font-size:12px;font-weight:500;color:#374151;">Group Name</label>
+        <input type="text" name="name" required class="form-control form-control-sm"
+               placeholder="e.g. Madrid Students" style="min-width:220px;border-radius:6px;">
+      </div>
+      <div>
+        <label class="form-label" style="font-size:12px;font-weight:500;color:#374151;">City (optional)</label>
+        <input type="text" name="city" class="form-control form-control-sm"
+               placeholder="e.g. Madrid" style="min-width:160px;border-radius:6px;">
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm" style="border-radius:6px;height:31px;">
+        <i class="bi bi-plus-circle me-1"></i> Create
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Groups Table -->
+<div class="admin-card">
+  <div class="admin-card-header">
+    <h2 class="admin-card-title">{{ groups|length }} group{{ groups|length|pluralize }}</h2>
+  </div>
+
+  {% if groups %}
+  <table class="admin-table">
+    <thead>
+      <tr><th>Group Name</th><th>City</th><th>Members</th><th>Created</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for group in groups %}
+      <tr>
+        <td><strong>{{ group.name }}</strong></td>
+        <td>{{ group.city|default:"—" }}</td>
+        <td>{{ group.members.count }} member{{ group.members.count|pluralize }}</td>
+        <td>{{ group.created_at|date:"d M Y" }}</td>
+        <td>
+          <div class="d-flex gap-1">
+            <button type="button" class="btn-action btn-view"
+                    data-bs-toggle="modal" data-bs-target="#editGroupModal{{ group.pk }}">
+              Edit
+            </button>
+            <button type="button" class="btn-action btn-reject"
+                    data-bs-toggle="modal" data-bs-target="#deleteGroupModal{{ group.pk }}">
+              Delete
+            </button>
+          </div>
+        </td>
+      </tr>
+
+      <!-- Edit Modal -->
+      <div class="modal fade" id="editGroupModal{{ group.pk }}" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Edit Group</h5></div>
+            <div class="modal-body">
+              <form method="post" action="{% url 'update-group' group.pk %}" id="editForm{{ group.pk }}">
+                {% csrf_token %}
+                <div class="mb-3">
+                  <label class="form-label">Group Name</label>
+                  <input type="text" name="name" value="{{ group.name }}" required class="form-control form-control-sm" style="border-radius:6px;">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">City</label>
+                  <input type="text" name="city" value="{{ group.city }}" class="form-control form-control-sm" style="border-radius:6px;">
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" form="editForm{{ group.pk }}" class="btn btn-primary btn-sm">Save Changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete Modal -->
+      <div class="modal fade" id="deleteGroupModal{{ group.pk }}" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Delete Group</h5></div>
+            <div class="modal-body">
+              Delete group <strong>{{ group.name }}</strong> and all its messages? This is irreversible.
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+              <form method="post" action="{% url 'delete-group' group.pk %}">
+                {% csrf_token %}<button type="submit" class="btn btn-danger btn-sm">Delete</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="p-4 text-center" style="color:#6B7280;">No chat groups yet. Create one above.</div>
+  {% endif %}
+</div>
+
+{% endblock %}

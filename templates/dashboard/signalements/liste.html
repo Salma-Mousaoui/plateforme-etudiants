@@ -1,0 +1,84 @@
+{% extends "dashboard/base_admin.html" %}
+
+{% block title %}Reports | Elan Admin{% endblock %}
+{% block page_title %}Reports{% endblock %}
+
+{% block admin_content %}
+
+<!-- Filters -->
+<form method="get" class="filter-bar mb-4">
+  <select name="statut" class="form-select form-select-sm" style="max-width:180px;">
+    <option value="">All Status</option>
+    <option value="pending" {% if statut == "pending" %}selected{% endif %}>Pending</option>
+    <option value="resolved" {% if statut == "resolved" %}selected{% endif %}>Resolved</option>
+  </select>
+  <button type="submit" class="btn btn-sm btn-primary" style="border-radius:6px;">Filter</button>
+  <a href="{% url 'dashboard-reports' %}" class="btn btn-sm btn-outline-secondary" style="border-radius:6px;">Reset</a>
+</form>
+
+<div class="admin-card">
+  <div class="admin-card-header">
+    <h2 class="admin-card-title">{{ reports.paginator.count }} report{{ reports.paginator.count|pluralize }}</h2>
+  </div>
+
+  {% if reports %}
+  <table class="admin-table">
+    <thead>
+      <tr><th>Type</th><th>Reason</th><th>Reported By</th><th>Date</th><th>Status</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for report in reports %}
+      <tr>
+        <td>
+          {% if report.listing %}
+            <span class="badge badge-info">Listing</span>
+          {% elif report.reported_user %}
+            <span class="badge" style="background:#EDE9FE;color:#5B21B6;">Professional</span>
+          {% else %}
+            <span class="badge badge-gray">Other</span>
+          {% endif %}
+        </td>
+        <td>{{ report.get_reason_display }}</td>
+        <td>{{ report.reporter.get_full_name|default:report.reporter.email }}</td>
+        <td>{{ report.created_at|date:"d M Y" }}</td>
+        <td>
+          {% if report.status == "pending" %}
+            <span class="badge badge-warning">Pending</span>
+          {% else %}
+            <span class="badge badge-success">Resolved</span>
+          {% endif %}
+        </td>
+        <td>
+          <div class="d-flex gap-1">
+            <a href="{% url 'dashboard-report-detail' report.pk %}" class="btn-action btn-view">Detail</a>
+            {% if report.status == "pending" %}
+              <form method="post" action="{% url 'resolve-report' report.pk %}" class="d-inline">
+                {% csrf_token %}<button type="submit" class="btn-action btn-validate">Resolve</button>
+              </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if reports.has_other_pages %}
+  <div class="d-flex justify-content-center gap-2 py-3">
+    {% if reports.has_previous %}
+      <a href="?page={{ reports.previous_page_number }}&statut={{ statut }}" class="btn btn-sm btn-outline-secondary">← Prev</a>
+    {% endif %}
+    <span class="btn btn-sm btn-primary disabled" style="background:#1D4ED8;border-color:#1D4ED8;">
+      {{ reports.number }} / {{ reports.paginator.num_pages }}
+    </span>
+    {% if reports.has_next %}
+      <a href="?page={{ reports.next_page_number }}&statut={{ statut }}" class="btn btn-sm btn-outline-secondary">Next →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="empty-state-success"><i class="bi bi-check-circle-fill me-1"></i> No reports found.</div>
+  {% endif %}
+</div>
+{% endblock %}

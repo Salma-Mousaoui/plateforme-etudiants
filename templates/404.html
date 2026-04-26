@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}404 — Page Not Found | Elan{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column align-items-center justify-content-center" style="min-height:60vh;text-align:center;padding:60px 20px;">
+  <div style="font-size:72px;font-weight:700;color:#6B7280;line-height:1;">404</div>
+  <h1 style="font-size:24px;font-weight:600;color:#111827;margin:16px 0 8px;">Page Not Found</h1>
+  <p style="color:#6B7280;max-width:400px;margin-bottom:32px;">
+    The page you're looking for doesn't exist or has been moved. Check the URL or go back home.
+  </p>
+  <a href="/" class="btn btn-primary" style="background:#1D4ED8;border-color:#1D4ED8;border-radius:8px;padding:10px 24px;font-weight:500;">
+    <i class="bi bi-house me-1"></i> Back to Home
+  </a>
+</div>
+{% endblock %}

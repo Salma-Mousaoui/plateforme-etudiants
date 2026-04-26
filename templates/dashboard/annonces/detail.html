@@ -1,0 +1,138 @@
+{% extends "dashboard/base_admin.html" %}
+
+{% block title %}{{ listing.title }} | Elan Admin{% endblock %}
+{% block page_title %}{{ listing.title }}{% endblock %}
+
+{% block admin_content %}
+
+<div class="d-flex gap-2 mb-3">
+  <a href="{% url 'dashboard-listings' %}" class="btn btn-sm btn-outline-secondary" style="border-radius:6px;">← Back to Listings</a>
+</div>
+
+<div class="two-col-grid">
+
+  <!-- Listing Info -->
+  <div class="admin-card">
+    <div class="admin-card-header"><h2 class="admin-card-title">Listing Details</h2></div>
+    <div class="detail-list">
+      <div class="detail-row"><span class="detail-label">Title</span><span>{{ listing.title }}</span></div>
+      <div class="detail-row"><span class="detail-label">Type</span>
+        <span>
+          {% if listing.type == "chambre" %}Room
+          {% elif listing.type == "appartement" %}Apartment
+          {% else %}Shared Housing{% endif %}
+        </span>
+      </div>
+      <div class="detail-row"><span class="detail-label">City</span><span>{{ listing.city }}</span></div>
+      <div class="detail-row"><span class="detail-label">Price</span><span>€{{ listing.price }} / month</span></div>
+      <div class="detail-row"><span class="detail-label">Owner</span>
+        <span>
+          {{ listing.owner.get_full_name|default:listing.owner.email }}
+          <a href="{% url 'dashboard-user-detail' listing.owner.id %}" class="ms-1 btn-action btn-view" style="font-size:11px;">Profile</a>
+        </span>
+      </div>
+      <div class="detail-row"><span class="detail-label">Status</span>
+        <span>
+          {% if listing.is_approved and listing.is_active %}
+            <span class="badge badge-success">Approved</span>
+          {% elif listing.is_active %}
+            <span class="badge badge-warning">Pending Approval</span>
+          {% else %}
+            <span class="badge badge-gray">Inactive</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="detail-row"><span class="detail-label">Published</span><span>{{ listing.created_at|date:"d M Y, H:i" }}</span></div>
+      <div class="detail-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+        <span class="detail-label">Description</span>
+        <p style="color:#374151;font-size:13px;margin:0;line-height:1.6;">{{ listing.description }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="admin-card">
+    <div class="admin-card-header"><h2 class="admin-card-title">Admin Actions</h2></div>
+    <div class="p-4 d-flex flex-column gap-2">
+      {% if not listing.is_approved %}
+        <form method="post" action="{% url 'validate-listing' listing.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-success btn-sm w-100" style="border-radius:6px;">
+            <i class="bi bi-check-circle me-1"></i> Approve Listing
+          </button>
+        </form>
+      {% endif %}
+      {% if listing.is_active %}
+        <form method="post" action="{% url 'reject-listing' listing.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-warning btn-sm w-100" style="border-radius:6px;">
+            <i class="bi bi-x-circle me-1"></i> Reject / Deactivate
+          </button>
+        </form>
+      {% endif %}
+      <button type="button" class="btn btn-danger btn-sm w-100" style="border-radius:6px;"
+              data-bs-toggle="modal" data-bs-target="#deleteListingModal">
+        <i class="bi bi-trash me-1"></i> Delete Listing
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Photos -->
+{% if listing.photos %}
+<div class="admin-card mt-4">
+  <div class="admin-card-header"><h2 class="admin-card-title">Photos</h2></div>
+  <div class="p-4 d-flex gap-3 flex-wrap">
+    {% for photo_url in listing.photos %}
+      <img src="{{ photo_url }}" alt="Listing photo"
+           style="width:180px;height:120px;object-fit:cover;border-radius:8px;border:1px solid #E5E7EB;">
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Reports on this listing -->
+{% if reports %}
+<div class="admin-card mt-4">
+  <div class="admin-card-header"><h2 class="admin-card-title">Reports ({{ reports.count }})</h2></div>
+  <table class="admin-table">
+    <thead><tr><th>Reason</th><th>Reported By</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for report in reports %}
+      <tr>
+        <td>{{ report.get_reason_display }}</td>
+        <td>{{ report.reporter.get_full_name|default:report.reporter.email }}</td>
+        <td>
+          {% if report.status == "pending" %}
+            <span class="badge badge-warning">Pending</span>
+          {% else %}
+            <span class="badge badge-success">Resolved</span>
+          {% endif %}
+        </td>
+        <td>{{ report.created_at|date:"d M Y" }}</td>
+        <td><a href="{% url 'dashboard-report-detail' report.pk %}" class="btn-action btn-view">View</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- Delete modal -->
+<div class="modal fade" id="deleteListingModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Delete Listing</h5></div>
+      <div class="modal-body"><strong>Irreversible.</strong> Delete <strong>{{ listing.title }}</strong>?</div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        <form method="post" action="{% url 'delete-listing' listing.pk %}">
+          {% csrf_token %}<button type="submit" class="btn btn-danger btn-sm">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

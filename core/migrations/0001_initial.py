@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
                 ('is_staff', models.BooleanField(default=False, help_text='Designates whether the user can log into this admin site.', verbose_name='staff status')),
                 ('is_active', models.BooleanField(default=True, help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.', verbose_name='active')),
                 ('date_joined', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined')),
-                ('role', models.CharField(choices=[('student', 'Étudiant'), ('lawyer', 'Avocat'), ('orientation', "Conseiller d'orientation"), ('housing', 'Agent immobilier'), ('admin', 'Administrateur')], default='student', max_length=20)),
+                ('role', models.CharField(choices=[('student', 'Student'), ('lawyer', 'Lawyer'), ('orientation', 'Academic Advisor'), ('housing', 'Landlord / Agency'), ('admin', 'Administrator')], default='student', max_length=20)),
                 ('city', models.CharField(blank=True, max_length=100)),
                 ('phone', models.CharField(blank=True, max_length=20)),
                 ('photo', models.ImageField(blank=True, null=True, upload_to='profiles/')),
@@ -59,8 +59,8 @@ class Migration(migrations.Migration):
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='professional_profile', to=settings.AUTH_USER_MODEL)),
             ],
             options={
-                'verbose_name': 'Profil professionnel',
-                'verbose_name_plural': 'Profils professionnels',
+                'verbose_name': 'Professional Profile',
+                'verbose_name_plural': 'Professional Profiles',
             },
         ),
     ]

@@ -1,7 +1,7 @@
 """
 Models for the reports app.
 
-Role : Signalements et modération de contenu.
+Role: Reports and content moderation.
 """
 
 from django.db import models
@@ -9,18 +9,18 @@ from django.conf import settings
 
 
 class Report(models.Model):
-    """Signalement d'une annonce ou d'un utilisateur."""
+    """Report filed against a listing or a user."""
 
     REASON_CHOICES = [
-        ('arnaque', 'Arnaque'),
-        ('comportement_inapproprie', 'Comportement inapproprié'),
-        ('faux_profil', 'Faux profil'),
-        ('autre', 'Autre'),
+        ('arnaque', 'Scam'),
+        ('comportement_inapproprie', 'Inappropriate Behaviour'),
+        ('faux_profil', 'Fake Profile'),
+        ('autre', 'Other'),
     ]
 
     STATUS_CHOICES = [
-        ('pending', 'En attente'),
-        ('resolved', 'Résolu'),
+        ('pending', 'Pending'),
+        ('resolved', 'Resolved'),
     ]
 
     reporter = models.ForeignKey(
@@ -48,9 +48,9 @@ class Report(models.Model):
 
     def __str__(self):
         target = self.reported_user or self.listing
-        return f"Signalement de {self.reporter.username} -> {target} ({self.get_status_display()})"
+        return f"Report by {self.reporter.username} -> {target} ({self.get_status_display()})"
 
     class Meta:
-        verbose_name = 'Signalement'
-        verbose_name_plural = 'Signalements'
+        verbose_name = 'Report'
+        verbose_name_plural = 'Reports'
         ordering = ['-created_at']

@@ -2,9 +2,11 @@
 Views for the reports app.
 """
 
-from django.shortcuts import render  # noqa: F401
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
 
 
+@login_required
 def index(request):
-    """Page d'accueil de l'app reports."""
+    """Reports page — requires authentication."""
     return render(request, 'reports/index.html')

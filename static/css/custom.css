@@ -11,6 +11,10 @@
   --font-body:      'Plus Jakarta Sans', sans-serif;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 /* ============================================================
    GLOBAL CONTAINER — aligns navbar + all sections to same grid
 ============================================================ */
@@ -123,10 +127,12 @@ body {
   background: linear-gradient(135deg, #0f2444 0%, #1E3A5F 40%, #2563EB 100%);
   padding-top: 48px;
   padding-bottom: 64px;
-  min-height: 85vh;
+  min-height: 100vh;
   position: relative;
   overflow: hidden;
   color: white;
+  display: flex;
+  align-items: center;
 }
 
 /* Radial glow — right side, where the card sits */
@@ -313,6 +319,9 @@ body {
 .trust-section {
   background: var(--elan-blue-light);
   border-bottom: 1px solid #dbeafe;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
 }
 .trust-pill {
   display: inline-flex;
@@ -335,8 +344,17 @@ body {
 ============================================================ */
 .services-section {
   background: #ffffff;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
 }
 .py-6 { padding-top: 5rem; padding-bottom: 5rem; }
+
+.how-section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
 
 .service-card {
   border: 1px solid #e5e7eb;
@@ -384,6 +402,9 @@ body {
 .cta-section {
   background: var(--elan-navy);
   color: white;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
 }
 .cta-icon {
   font-size: 3rem;

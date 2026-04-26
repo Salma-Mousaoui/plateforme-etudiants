@@ -1,0 +1,204 @@
+{% extends "dashboard/base_admin.html" %}
+
+{% block title %}{{ page_title|default:"Users" }} | Elan Admin{% endblock %}
+{% block page_title %}{{ page_title|default:"All Users" }}{% endblock %}
+
+{% block admin_content %}
+
+<!-- ── FILTERS ───────────────────────────────────────────────────────────── -->
+<form method="get" class="filter-bar mb-4">
+  <input type="text" name="search" value="{{ search }}" placeholder="Search name or email…"
+         class="form-control form-control-sm" style="max-width:240px;">
+  <select name="role" class="form-select form-select-sm" style="max-width:160px;">
+    <option value="">All Roles</option>
+    <option value="student" {% if role == "student" %}selected{% endif %}>Student</option>
+    <option value="lawyer" {% if role == "lawyer" %}selected{% endif %}>Lawyer</option>
+    <option value="orientation" {% if role == "orientation" %}selected{% endif %}>Counselor</option>
+    <option value="housing" {% if role == "housing" %}selected{% endif %}>Landlord</option>
+    <option value="admin" {% if role == "admin" %}selected{% endif %}>Admin</option>
+  </select>
+  <select name="statut" class="form-select form-select-sm" style="max-width:160px;">
+    <option value="">All Status</option>
+    <option value="actif" {% if statut == "actif" %}selected{% endif %}>Active</option>
+    <option value="inactif" {% if statut == "inactif" %}selected{% endif %}>Inactive</option>
+    <option value="attente" {% if statut == "attente" %}selected{% endif %}>Pending</option>
+  </select>
+  <button type="submit" class="btn btn-sm btn-primary" style="border-radius:6px;">Filter</button>
+  <a href="{% url 'dashboard-users' %}" class="btn btn-sm btn-outline-secondary" style="border-radius:6px;">Reset</a>
+</form>
+
+<!-- ── USERS TABLE ───────────────────────────────────────────────────────── -->
+<div class="admin-card">
+  <div class="admin-card-header">
+    <h2 class="admin-card-title">{{ users.paginator.count }} user{{ users.paginator.count|pluralize }}</h2>
+  </div>
+
+  {% if users %}
+  <form id="bulk-form" method="post">
+    {% csrf_token %}
+    <div class="mb-2 d-flex gap-2 align-items-center" style="padding:0 16px 8px;">
+      <select name="bulk_action" class="form-select form-select-sm" style="max-width:200px;">
+        <option value="">— Bulk action —</option>
+        <option value="activate">Activate selected</option>
+        <option value="deactivate">Deactivate selected</option>
+      </select>
+      <button type="submit" class="btn btn-sm btn-outline-secondary" style="border-radius:6px;">Apply</button>
+    </div>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th style="width:36px;"><input type="checkbox" id="check-all" class="form-check-input"></th>
+          <th>User</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Registered</th>
+          <th>Last Login</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td><input type="checkbox" name="selected_users" value="{{ u.pk }}" class="form-check-input user-check"></td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              {% if u.photo %}
+                <img src="{{ u.photo.url }}" class="user-avatar-sm" style="object-fit:cover;" alt="">
+              {% else %}
+                <div class="user-avatar-sm">{{ u.first_name|first|upper }}{{ u.last_name|first|upper }}</div>
+              {% endif %}
+              <span>{{ u.get_full_name|default:u.username }}</span>
+            </div>
+          </td>
+          <td>{{ u.email }}</td>
+          <td>
+            {% if u.role == "admin" %}
+              <span class="badge badge-danger">Admin</span>
+            {% elif u.role == "lawyer" %}
+              <span class="badge badge-info">Lawyer</span>
+            {% elif u.role == "orientation" %}
+              <span class="badge badge-info">Counselor</span>
+            {% elif u.role == "housing" %}
+              <span class="badge badge-info">Landlord</span>
+            {% else %}
+              <span class="badge badge-gray">Student</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if u.is_active and u.is_validated %}
+              <span class="badge badge-success">Active</span>
+            {% elif not u.is_active %}
+              <span class="badge badge-gray">Inactive</span>
+            {% else %}
+              <span class="badge badge-warning">Pending</span>
+            {% endif %}
+          </td>
+          <td>{{ u.date_joined|date:"d M Y" }}</td>
+          <td>{{ u.last_login|date:"d M Y"|default:"—" }}</td>
+          <td>
+            <div class="d-flex gap-1 flex-wrap">
+              <a href="{% url 'dashboard-user-detail' u.pk %}" class="btn-action btn-view">View</a>
+              {% if not u.is_validated and u.is_pro %}
+                <form method="post" action="{% url 'validate-user' u.pk %}" class="d-inline">
+                  {% csrf_token %}<button type="submit" class="btn-action btn-validate">Validate</button>
+                </form>
+              {% endif %}
+              {% if u.is_active %}
+                <button type="button" class="btn-action btn-reject"
+                        data-bs-toggle="modal" data-bs-target="#deactivateModal{{ u.pk }}">
+                  Disable
+                </button>
+              {% else %}
+                <form method="post" action="{% url 'activate-user' u.pk %}" class="d-inline">
+                  {% csrf_token %}<button type="submit" class="btn-action btn-validate">Enable</button>
+                </form>
+              {% endif %}
+              {% if u.role != "admin" %}
+                <button type="button" class="btn-action btn-reject"
+                        data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ u.pk }}">
+                  Delete
+                </button>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+
+        <!-- Deactivate modal -->
+        <div class="modal fade" id="deactivateModal{{ u.pk }}" tabindex="-1">
+          <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Disable Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body" style="font-size:14px">
+                Disable <strong>{{ u.get_full_name|default:u.email }}</strong>?
+                The user will no longer be able to sign in.
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'deactivate-user' u.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger btn-sm">Disable</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Delete modal -->
+        <div class="modal fade" id="deleteUserModal{{ u.pk }}" tabindex="-1">
+          <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body" style="font-size:14px">
+                Delete <strong>{{ u.get_full_name|default:u.email }}</strong>?
+                This action is <strong>irreversible</strong>.
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'delete-user' u.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger btn-sm">Confirm Delete</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </tbody>
+    </table>
+  </form>
+
+  <!-- Pagination -->
+  {% if users.has_other_pages %}
+  <div class="d-flex justify-content-center gap-2 py-3">
+    {% if users.has_previous %}
+      <a href="?page={{ users.previous_page_number }}&search={{ search }}&role={{ role }}&statut={{ statut }}"
+         class="btn btn-sm btn-outline-secondary">← Prev</a>
+    {% endif %}
+    <span class="btn btn-sm btn-primary disabled" style="background:#1D4ED8;border-color:#1D4ED8;">
+      {{ users.number }} / {{ users.paginator.num_pages }}
+    </span>
+    {% if users.has_next %}
+      <a href="?page={{ users.next_page_number }}&search={{ search }}&role={{ role }}&statut={{ statut }}"
+         class="btn btn-sm btn-outline-secondary">Next →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="p-4 text-center" style="color:#6B7280;">No users found matching the current filters.</div>
+  {% endif %}
+</div>
+
+<script>
+  document.getElementById('check-all')?.addEventListener('change', function () {
+    document.querySelectorAll('.user-check').forEach(cb => cb.checked = this.checked);
+  });
+</script>
+{% endblock %}

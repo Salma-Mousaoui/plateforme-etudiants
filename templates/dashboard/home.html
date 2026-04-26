@@ -1,0 +1,197 @@
+{% extends "dashboard/base_admin.html" %}
+
+{% block title %}Admin Dashboard | Elan{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block admin_content %}
+
+<!-- ── METRICS GRID ──────────────────────────────────────────────────────── -->
+<div class="metrics-grid">
+
+  <div class="metric-card metric-blue">
+    <div class="metric-label">Total Users</div>
+    <div class="metric-value">{{ total_users }}</div>
+    <div class="metric-sub">+{{ new_this_month }} registered this month</div>
+  </div>
+
+  <div class="metric-card {% if pros_count > 0 %}metric-orange{% else %}metric-green{% endif %}">
+    <div class="metric-label">Pending Professionals</div>
+    <div class="metric-value">{{ pros_count }}</div>
+    <div class="metric-sub">{% if pros_count > 0 %}validation required{% else %}all clear{% endif %}</div>
+  </div>
+
+  <div class="metric-card {% if open_reports > 0 %}metric-red{% else %}metric-green{% endif %}">
+    <div class="metric-label">Open Reports</div>
+    <div class="metric-value">{{ open_reports }}</div>
+    <div class="metric-sub">{% if open_reports > 0 %}require attention{% else %}no pending reports{% endif %}</div>
+  </div>
+
+  <div class="metric-card metric-blue">
+    <div class="metric-label">Active Listings</div>
+    <div class="metric-value">{{ active_listings }}</div>
+    <div class="metric-sub">{{ pending_listings }} pending approval</div>
+  </div>
+
+</div>
+
+<!-- ── PENDING PROFESSIONALS ─────────────────────────────────────────────── -->
+<div class="admin-card mt-4">
+  <div class="admin-card-header">
+    <h2 class="admin-card-title">Professionals Awaiting Validation</h2>
+    <a href="{% url 'dashboard-pending-pros' %}" class="admin-card-link">View all →</a>
+  </div>
+
+  {% if pros_en_attente %}
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Full Name</th>
+        <th>Role</th>
+        <th>Email</th>
+        <th>Registered</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in pros_en_attente %}
+      <tr>
+        <td>
+          <div class="d-flex align-items-center gap-2">
+            <div class="user-avatar-sm">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+            {{ user.get_full_name|default:user.username }}
+          </div>
+        </td>
+        <td>
+          {% if user.role == "lawyer" %}
+            <span class="badge badge-info">Lawyer</span>
+          {% elif user.role == "orientation" %}
+            <span class="badge badge-info">Counselor</span>
+          {% elif user.role == "housing" %}
+            <span class="badge badge-info">Landlord</span>
+          {% else %}
+            <span class="badge badge-gray">{{ user.role }}</span>
+          {% endif %}
+        </td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.date_joined|date:"d M Y" }}</td>
+        <td>
+          <div class="d-flex gap-1 flex-wrap">
+            <form method="post" action="{% url 'validate-user' user.id %}" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn-action btn-validate">Validate</button>
+            </form>
+            <button type="button" class="btn-action btn-reject"
+                    data-bs-toggle="modal" data-bs-target="#rejectUserModal{{ user.id }}">
+              Reject
+            </button>
+            <a href="{% url 'dashboard-user-detail' user.id %}" class="btn-action btn-view">Profile</a>
+          </div>
+        </td>
+      </tr>
+
+      <!-- Reject confirmation modal -->
+      <div class="modal fade" id="rejectUserModal{{ user.id }}" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Reject Account</h5></div>
+            <div class="modal-body">
+              Are you sure you want to reject <strong>{{ user.get_full_name }}</strong>?
+              Their account will be deactivated.
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+              <form method="post" action="{% url 'deactivate-user' user.id %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm">Confirm Reject</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state-success">
+    <i class="bi bi-check-circle-fill me-1"></i> No accounts pending validation.
+  </div>
+  {% endif %}
+</div>
+
+<!-- ── TWO-COLUMN SECTION ────────────────────────────────────────────────── -->
+<div class="two-col-grid mt-4">
+
+  <!-- Pending Listings -->
+  <div class="admin-card">
+    <div class="admin-card-header">
+      <h2 class="admin-card-title">Pending Listings</h2>
+      <a href="{% url 'dashboard-listings' %}?statut=pending" class="admin-card-link">View all →</a>
+    </div>
+    {% if annonces_en_attente %}
+    <table class="admin-table">
+      <thead>
+        <tr><th>Title</th><th>Owner</th><th>City</th><th>Price</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for listing in annonces_en_attente %}
+        <tr>
+          <td>{{ listing.title|truncatechars:30 }}</td>
+          <td>{{ listing.owner.get_full_name|default:listing.owner.email }}</td>
+          <td>{{ listing.city }}</td>
+          <td>€{{ listing.price }}</td>
+          <td>
+            <div class="d-flex gap-1">
+              <form method="post" action="{% url 'validate-listing' listing.pk %}" class="d-inline">
+                {% csrf_token %}<button type="submit" class="btn-action btn-validate">Approve</button>
+              </form>
+              <form method="post" action="{% url 'reject-listing' listing.pk %}" class="d-inline">
+                {% csrf_token %}<button type="submit" class="btn-action btn-reject">Reject</button>
+              </form>
+              <a href="{% url 'dashboard-listing-detail' listing.pk %}" class="btn-action btn-view">View</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state-success"><i class="bi bi-check-circle-fill me-1"></i> No pending listings.</div>
+    {% endif %}
+  </div>
+
+  <!-- Recent Reports -->
+  <div class="admin-card">
+    <div class="admin-card-header">
+      <h2 class="admin-card-title">Recent Reports</h2>
+      <a href="{% url 'dashboard-reports' %}" class="admin-card-link">View all →</a>
+    </div>
+    {% if signalements_pending %}
+    <table class="admin-table">
+      <thead>
+        <tr><th>Reason</th><th>Reported By</th><th>Date</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for report in signalements_pending %}
+        <tr>
+          <td>{{ report.get_reason_display }}</td>
+          <td>{{ report.reporter.get_full_name|default:report.reporter.email }}</td>
+          <td>{{ report.created_at|date:"d M Y" }}</td>
+          <td>
+            <div class="d-flex gap-1">
+              <a href="{% url 'dashboard-report-detail' report.pk %}" class="btn-action btn-view">Detail</a>
+              <form method="post" action="{% url 'resolve-report' report.pk %}" class="d-inline">
+                {% csrf_token %}<button type="submit" class="btn-action btn-validate">Resolve</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state-success"><i class="bi bi-check-circle-fill me-1"></i> No pending reports.</div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
