@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Post a Listing — Elan{% endblock %}
+
+{% block content %}
+<div class="elan-container mt-4 mb-5" style="max-width:680px">
+
+  <a href="{% url 'my-listings' %}" class="btn btn-sm btn-outline-secondary mb-4">
+    <i class="bi bi-arrow-left me-1"></i>My Listings
+  </a>
+
+  <div class="card border-0 shadow-sm p-4 p-md-5" style="border-radius:16px">
+    <h1 class="fw-bold mb-1" style="font-family:var(--font-display);font-size:1.6rem;color:var(--elan-navy)">
+      <i class="bi bi-plus-circle me-2" style="color:var(--elan-blue)"></i>Post a New Listing
+    </h1>
+    <p class="text-muted mb-4">Your listing will be reviewed by an admin before it goes live.</p>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      {% for field in form %}
+        <div class="mb-3">
+          <label for="{{ field.id_for_label }}" class="form-label fw-semibold small">
+            {{ field.label }}
+          </label>
+          {{ field }}
+          {% if field.errors %}
+            {% for error in field.errors %}
+              <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+            {% endfor %}
+          {% endif %}
+          {% if field.help_text %}
+            <div class="form-text">{{ field.help_text }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <div class="d-grid mt-4">
+        <button type="submit" class="btn btn-primary py-2"
+                style="background:var(--elan-blue);border:none;border-radius:10px;font-weight:600">
+          <i class="bi bi-send me-2"></i>Submit Listing
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

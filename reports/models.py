@@ -9,48 +9,41 @@ from django.conf import settings
 
 
 class Report(models.Model):
-    """Report filed against a listing or a user."""
-
-    REASON_CHOICES = [
-        ('arnaque', 'Scam'),
-        ('comportement_inapproprie', 'Inappropriate Behaviour'),
-        ('faux_profil', 'Fake Profile'),
-        ('autre', 'Other'),
-    ]
-
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('resolved', 'Resolved'),
+    REASONS = [
+        ("scam", "Scam"),
+        ("inappropriate_behavior", "Inappropriate behavior"),
+        ("fake_profile", "Fake profile"),
+        ("other", "Other"),
     ]
 
     reporter = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='reports_made',
+        related_name="reports_sent",
     )
     listing = models.ForeignKey(
-        'housing.HousingListing',
-        on_delete=models.CASCADE,
-        related_name='reports',
+        "housing.HousingListing",
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
     )
     reported_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='reports_received',
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
+        related_name="reports_received",
     )
-    reason = models.CharField(max_length=30, choices=REASON_CHOICES)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    reason = models.CharField(max_length=50, choices=REASONS)
+    description = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=20,
+        default="pending",
+        choices=[("pending", "Pending"), ("resolved", "Resolved")],
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        target = self.reported_user or self.listing
-        return f"Report by {self.reporter.username} -> {target} ({self.get_status_display()})"
-
     class Meta:
-        verbose_name = 'Report'
-        verbose_name_plural = 'Reports'
-        ordering = ['-created_at']
+        verbose_name = "Report"
+        verbose_name_plural = "Reports"
+        ordering = ["-created_at"]
