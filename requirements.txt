@@ -6,3 +6,4 @@ python-decouple
 pillow
 whitenoise
 dj-database-url
+faker

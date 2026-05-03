@@ -1,0 +1,278 @@
+{% extends "base_app.html" %}
+{% load static %}
+
+{% block title %}Annonces de logement — ÉLAN{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/housing.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="elan-container housing-layout">
+
+  <!-- === Hero compact === -->
+  <div class="listing-hero">
+    <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
+      <div>
+        <h1 class="listing-hero-title">
+          <i class="bi bi-building me-2 text-elan-blue"></i>Annonces de logement
+        </h1>
+        <p class="t-muted mb-0">Trouvez votre logement idéal en Espagne</p>
+      </div>
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <span class="listing-count-badge">
+          <i class="bi bi-grid-3x3-gap-fill"></i>
+          {{ listings|length }} annonce{% if listings|length != 1 %}s{% endif %} disponible{% if listings|length != 1 %}s{% endif %}
+        </span>
+        {% if request.user.is_authenticated and request.user.role == "housing" and request.user.is_validated %}
+          <a href="{% url 'create-listing' %}" class="btn btn-sm btn-navy">
+            <i class="bi bi-plus-lg me-1"></i>Publier une annonce
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- === Sidebar filtres === -->
+    <div class="col-md-3">
+
+      <!-- Toggle mobile -->
+      <button class="btn-filters-toggle d-md-none mb-3"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#filtersCollapse"
+              aria-expanded="false"
+              aria-controls="filtersCollapse">
+        <span><i class="bi bi-funnel me-2"></i>Filtres</span>
+        <i class="bi bi-chevron-down toggle-chevron"></i>
+      </button>
+
+      <div class="collapse d-md-block" id="filtersCollapse">
+        <form method="GET" action="{% url 'listings' %}" id="filtersForm">
+
+          <div class="sidebar-filter">
+
+            <!-- Ville -->
+            <p class="sidebar-section-title">Ville</p>
+            {% for city_item in city_counts %}
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox"
+                       name="city" value="{{ city_item.city }}"
+                       id="city-{{ forloop.counter }}"
+                       {% if city_item.city in selected_cities %}checked{% endif %}>
+                <label class="form-check-label" for="city-{{ forloop.counter }}">
+                  {{ city_item.city }}
+                  <span class="t-muted">({{ city_item.count }})</span>
+                </label>
+              </div>
+            {% empty %}
+              <p class="t-muted">Aucune ville disponible.</p>
+            {% endfor %}
+
+            <hr>
+
+            <!-- Type de logement -->
+            <p class="sidebar-section-title">Type de logement</p>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="radio"
+                     name="type" value=""
+                     id="type-all"
+                     {% if not selected_type %}checked{% endif %}>
+              <label class="form-check-label" for="type-all">Tous les types</label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="radio"
+                     name="type" value="chambre"
+                     id="type-chambre"
+                     {% if selected_type == "chambre" %}checked{% endif %}>
+              <label class="form-check-label" for="type-chambre">
+                Chambre
+                <span class="badge-type badge-type-chambre ms-1">Chambre</span>
+              </label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="radio"
+                     name="type" value="appartement"
+                     id="type-appartement"
+                     {% if selected_type == "appartement" %}checked{% endif %}>
+              <label class="form-check-label" for="type-appartement">
+                Appartement
+                <span class="badge-type badge-type-appartement ms-1">Appart.</span>
+              </label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="radio"
+                     name="type" value="colocation"
+                     id="type-colocation"
+                     {% if selected_type == "colocation" %}checked{% endif %}>
+              <label class="form-check-label" for="type-colocation">
+                Colocation
+                <span class="badge-type badge-type-colocation ms-1">Coloc</span>
+              </label>
+            </div>
+
+            <hr>
+
+            <!-- Fourchette de prix -->
+            <p class="sidebar-section-title">Fourchette de prix</p>
+            <div class="input-group input-group-sm mb-2">
+              <span class="input-group-text">€</span>
+              <input type="number" class="form-control"
+                     name="price_min" id="price_min"
+                     placeholder="Min" min="0"
+                     value="{{ request.GET.price_min }}">
+            </div>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text">€</span>
+              <input type="number" class="form-control"
+                     name="price_max" id="price_max"
+                     placeholder="Max" min="0"
+                     value="{{ request.GET.price_max }}">
+            </div>
+
+            <hr>
+
+            <button type="submit" class="btn btn-sm btn-navy w-100">
+              <i class="bi bi-funnel me-1"></i>Appliquer les filtres
+            </button>
+            <a href="{% url 'listings' %}" class="sidebar-filter-reset">Réinitialiser</a>
+
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- === Grille de résultats === -->
+    <div class="col-md-9">
+      <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+
+        {% for listing in listings %}
+          <div class="col">
+            <div class="card-listing">
+
+              <!-- Image + badges absolus -->
+              <div class="card-listing-img-wrap">
+                <div class="listing-img-placeholder">
+                  <i class="bi bi-building"></i>
+                </div>
+                <div class="card-listing-badges">
+                  {% if listing.type == "chambre" %}
+                    <span class="badge-type badge-type-chambre">Chambre</span>
+                  {% elif listing.type == "appartement" %}
+                    <span class="badge-type badge-type-appartement">Appartement</span>
+                  {% else %}
+                    <span class="badge-type badge-type-colocation">Colocation</span>
+                  {% endif %}
+                  <span class="badge-valid">
+                    <i class="bi bi-check-circle-fill me-1"></i>Disponible
+                  </span>
+                </div>
+              </div>
+
+              <!-- Corps de la carte -->
+              <div class="card-listing-body">
+                <p class="card-listing-title">{{ listing.title|truncatechars:60 }}</p>
+                <p class="card-listing-city">
+                  <i class="bi bi-geo-alt me-1"></i>{{ listing.city }}
+                </p>
+                <p class="card-listing-price">
+                  {{ listing.price }}€<span class="card-listing-price-unit">/mois</span>
+                </p>
+                {% if listing.description %}
+                  <p class="card-listing-desc">{{ listing.description }}</p>
+                {% endif %}
+              </div>
+
+              <!-- Pied de carte -->
+              <div class="card-listing-footer">
+                <a href="{% url 'listing-detail' listing.pk %}"
+                   class="btn btn-sm btn-elan flex-grow-1">
+                  Voir l'annonce <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+                {% if request.user.is_authenticated %}
+                  <button type="button"
+                          class="btn btn-sm btn-ghost-blue"
+                          data-bs-toggle="modal"
+                          data-bs-target="#reportModal-{{ listing.pk }}"
+                          title="Signaler cette annonce">
+                    <i class="bi bi-flag"></i>
+                  </button>
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Modal signalement -->
+          {% if request.user.is_authenticated %}
+            <div class="modal fade" id="reportModal-{{ listing.pk }}"
+                 tabindex="-1" aria-labelledby="reportModalLabel-{{ listing.pk }}" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                  <form method="POST" action="{% url 'report-listing' listing.pk %}">
+                    {% csrf_token %}
+                    <div class="modal-header border-0 pb-0">
+                      <h5 class="modal-report-title" id="reportModalLabel-{{ listing.pk }}">
+                        <i class="bi bi-flag me-2 text-elan-navy"></i>Signaler cette annonce
+                      </h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body pt-3">
+                      <div class="mb-3">
+                        <label class="sidebar-section-title d-block mb-1" for="reason-{{ listing.pk }}">Raison</label>
+                        <select name="reason" id="reason-{{ listing.pk }}"
+                                class="form-select form-select-sm" required>
+                          <option value="scam">Arnaque</option>
+                          <option value="inappropriate">Contenu inapproprié</option>
+                          <option value="fake">Annonce fictive</option>
+                          <option value="other">Autre</option>
+                        </select>
+                      </div>
+                      <div class="mb-0">
+                        <label class="sidebar-section-title d-block mb-1" for="desc-{{ listing.pk }}">
+                          Description <span class="t-muted">(optionnel)</span>
+                        </label>
+                        <textarea name="description" id="desc-{{ listing.pk }}"
+                                  class="form-control form-control-sm" rows="3"
+                                  placeholder="Décrivez le problème…"></textarea>
+                      </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                      <button type="button" class="btn btn-sm btn-ghost-blue"
+                              data-bs-dismiss="modal">Annuler</button>
+                      <button type="submit" class="btn btn-sm btn-navy">
+                        <i class="bi bi-flag me-1"></i>Envoyer le signalement
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+
+        {% empty %}
+
+          <!-- État vide -->
+          <div class="col-12">
+            <div class="empty-state">
+              <i class="bi bi-building-x empty-state-icon"></i>
+              <p class="empty-state-title">Aucune annonce disponible</p>
+              <p class="empty-state-text">
+                Aucune annonce ne correspond à vos critères de recherche.
+              </p>
+              <a href="{% url 'listings' %}" class="btn btn-sm btn-ghost-blue">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>Réinitialiser les filtres
+              </a>
+            </div>
+          </div>
+
+        {% endfor %}
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

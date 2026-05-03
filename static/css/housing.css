@@ -1,0 +1,70 @@
+/* ============================================================
+   HOUSING PAGE — styles spécifiques à la page annonces
+============================================================ */
+
+/* Layout principal : occupe l'espace entre navbar et footer */
+.housing-layout {
+  padding-top: 28px;
+  padding-bottom: 40px;
+}
+
+/* Séparateur de section dans la sidebar */
+.sidebar-filter-reset {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: #6b7280;
+  text-decoration: none;
+  display: block;
+  text-align: center;
+  margin-top: 8px;
+  transition: color 0.15s;
+}
+.sidebar-filter-reset:hover {
+  color: var(--elan-blue);
+}
+
+/* Bouton toggle filtres mobile */
+.btn-filters-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-card);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--elan-navy);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-filters-toggle:hover {
+  background: var(--elan-blue-light);
+}
+.btn-filters-toggle[aria-expanded="true"] .toggle-chevron {
+  transform: rotate(180deg);
+}
+.toggle-chevron {
+  transition: transform 0.2s ease;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Titres de la modale signalement */
+.modal-report-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--elan-navy);
+}
+
+/* ============================================================
+   RESPONSIVE — breakpoints housing
+============================================================ */
+@media (max-width: 767px) {
+  .housing-layout {
+    padding-top: 16px;
+  }
+}

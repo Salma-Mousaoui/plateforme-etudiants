@@ -9,6 +9,9 @@
   --elan-charcoal:  #111827;
   --font-display:   'Sora', sans-serif;
   --font-body:      'Plus Jakarta Sans', sans-serif;
+  --radius-card:    12px;
+  --radius-btn:     8px;
+  --shadow-card:    0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
 }
 
 html {
@@ -509,6 +512,10 @@ body {
 /* ============================================================
    ELAN BUTTON SYSTEM
 ============================================================ */
+.btn-navy, .btn-elan, .btn-ghost-blue, .btn-outline-navy {
+  border-radius: var(--radius-btn);
+  font-family: var(--font-body);
+}
 .btn-navy        { background: var(--elan-navy); color: #fff; border: none; }
 .btn-navy:hover  { background: #16304f; color: #fff; }
 .btn-elan        { background: var(--elan-blue); color: #fff; border: none; }
@@ -519,10 +526,9 @@ body {
 .btn-outline-navy:hover { background: var(--elan-navy); color: #fff; }
 
 /* ============================================================
-   RESPONSIVE
+   RESPONSIVE — Landing page
 ============================================================ */
 @media (max-width: 991px) {
-  /* Columns stack: text on top, card below */
   .hero-title   { font-size: 2.4rem; }
   .hero-card    { max-width: 100%; margin-top: 40px; }
   .py-6         { padding-top: 3.5rem; padding-bottom: 3.5rem; }
@@ -535,4 +541,298 @@ body {
   .hero-buttons .btn-hero-primary,
   .hero-buttons .btn-hero-secondary { width: 100%; justify-content: center; }
   .hero-card    { padding: 20px; }
+}
+
+/* ============================================================
+   COLOR UTILITIES
+============================================================ */
+.text-elan-blue  { color: var(--elan-blue); }
+.text-elan-navy  { color: var(--elan-navy); }
+
+/* ============================================================
+   COMPOSANT : NavLink Active
+============================================================ */
+.navbar-elan .nav-link-item.active {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ============================================================
+   COMPOSANT : NotificationBadge
+============================================================ */
+.nav-notif-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.nav-notif-dot {
+  position: absolute;
+  top: -3px;
+  right: -7px;
+  width: 8px;
+  height: 8px;
+  background: #EF4444;
+  border-radius: 50%;
+  border: 1.5px solid var(--elan-navy);
+}
+
+/* ============================================================
+   COMPOSANT : FooterApp
+============================================================ */
+.footer-app {
+  background: var(--elan-charcoal);
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.footer-app-copy {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.5);
+  margin: 0;
+}
+
+/* ============================================================
+   COMPOSANT : ListingHero
+============================================================ */
+.listing-hero {
+  padding: 24px 0 20px;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 24px;
+}
+.listing-hero-title {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--elan-navy);
+  margin-bottom: 4px;
+}
+.listing-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--elan-blue-light);
+  color: var(--elan-blue);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 50px;
+}
+
+/* ============================================================
+   COMPOSANT : SidebarFilter
+============================================================ */
+.sidebar-filter {
+  background: #fff;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+  position: sticky;
+  top: 74px;
+}
+.sidebar-section-title {
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+.sidebar-filter hr {
+  border-color: #f1f5f9;
+  margin: 16px 0;
+}
+.sidebar-filter .form-check-label {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: #374151;
+}
+.sidebar-filter .form-check-input:checked {
+  background-color: var(--elan-blue);
+  border-color: var(--elan-blue);
+}
+.sidebar-filter .form-check-input:focus {
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+  border-color: var(--elan-blue);
+}
+.sidebar-filter .input-group-text {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  background: var(--elan-blue-light);
+  border-color: #e5e7eb;
+}
+.sidebar-filter .form-control,
+.sidebar-filter .form-select {
+  font-size: 0.8125rem;
+  border-color: #e5e7eb;
+}
+.sidebar-filter .form-control:focus,
+.sidebar-filter .form-select:focus {
+  border-color: var(--elan-blue);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+
+/* ============================================================
+   COMPOSANT : CardListing
+============================================================ */
+.card-listing {
+  border: none;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card-listing:hover {
+  box-shadow: 0 4px 24px rgba(37,99,235,0.12);
+  transform: translateY(-2px);
+}
+.card-listing-img-wrap {
+  position: relative;
+  height: 160px;
+  overflow: hidden;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  flex-shrink: 0;
+}
+.card-listing-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.listing-img-placeholder {
+  width: 100%;
+  height: 100%;
+  background: var(--elan-blue-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.listing-img-placeholder .bi {
+  font-size: 3rem;
+  color: var(--elan-blue);
+  opacity: 0.35;
+}
+.card-listing-badges {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.badge-type {
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 50px;
+  line-height: 1.4;
+}
+.badge-type-chambre     { background: var(--elan-blue-light); color: var(--elan-blue); }
+.badge-type-appartement { background: #F0FDF4; color: #16A34A; }
+.badge-type-colocation  { background: #FFF7ED; color: #EA580C; }
+.badge-valid {
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 50px;
+  line-height: 1.4;
+  background: #DCFCE7;
+  color: #16A34A;
+}
+.card-listing-body {
+  padding: 14px 16px 10px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.card-listing-title {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--elan-charcoal);
+  margin-bottom: 3px;
+  line-height: 1.4;
+}
+.card-listing-city {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+.card-listing-price {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--elan-navy);
+  line-height: 1;
+  margin-bottom: 0;
+}
+.card-listing-price-unit {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #6b7280;
+}
+.card-listing-desc {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: #6b7280;
+  line-height: 1.5;
+  margin-top: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+}
+.card-listing-footer {
+  padding: 10px 12px 14px;
+  display: flex;
+  gap: 8px;
+}
+
+/* ============================================================
+   COMPOSANT : EmptyState
+============================================================ */
+.empty-state {
+  text-align: center;
+  padding: 64px 24px;
+}
+.empty-state-icon {
+  display: block;
+  font-size: 3rem;
+  color: #cbd5e1;
+  margin-bottom: 16px;
+}
+.empty-state-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--elan-navy);
+  margin-bottom: 6px;
+}
+.empty-state-text {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+/* ============================================================
+   RESPONSIVE — App layout (mobile)
+============================================================ */
+@media (max-width: 767px) {
+  .sidebar-filter {
+    position: static;
+    border-radius: var(--radius-card);
+    margin-bottom: 16px;
+  }
 }
