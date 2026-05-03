@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import Count
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import method_decorator
@@ -16,12 +17,12 @@ class ListingListView(ListView):
 
     def get_queryset(self):
         qs = HousingListing.objects.filter(is_approved=True, is_active=True)
-        city = self.request.GET.get("city")
+        cities = self.request.GET.getlist("city")
         listing_type = self.request.GET.get("type")
         price_min = self.request.GET.get("price_min")
         price_max = self.request.GET.get("price_max")
-        if city:
-            qs = qs.filter(city__icontains=city)
+        if cities:
+            qs = qs.filter(city__in=cities)
         if listing_type:
             qs = qs.filter(type=listing_type)
         if price_min:
@@ -38,12 +39,15 @@ class ListingListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["cities"] = (
-            HousingListing.objects.filter(is_approved=True, is_active=True)
-            .values_list("city", flat=True)
-            .distinct()
+        approved_active = HousingListing.objects.filter(is_approved=True, is_active=True)
+        context["city_counts"] = (
+            approved_active
+            .values("city")
+            .annotate(count=Count("id"))
             .order_by("city")
         )
+        context["selected_cities"] = self.request.GET.getlist("city")
+        context["selected_type"] = self.request.GET.get("type", "")
         context["types"] = HousingListing.TYPES
         return context
 
