@@ -11,4 +11,6 @@ urlpatterns = [
     path("login/",    CustomLoginView.as_view(),    name="login"),
     path("logout/",   CustomLogoutView.as_view(),   name="logout"),
     path("profile/",  views.profil_view,            name="profil"),
+    path("mon-espace/",                  views.EspaceProView,         name="espace-pro"),
+    path("mon-espace/modifier-profil/",  views.UpdateProfileProView,  name="update-profile-pro"),
 ]

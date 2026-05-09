@@ -30,9 +30,9 @@ def _role_dashboard_url(role):
     """Return the redirect URL name for a given user role."""
     if role == "admin":
         return "dashboard"
-    if role in ("lawyer", "orientation"):
-        return "professionals"
-    return "housing"  # student and housing landlord
+    if role in ("lawyer", "orientation", "housing"):
+        return "espace-pro"
+    return "housing"  # student
 
 
 class LandingView(TemplateView):
@@ -59,14 +59,14 @@ class LandingView(TemplateView):
                 "title":       "Counselors",
                 "anchor":      "counselors",
                 "description": "University and academic degree advice",
-                "url":         "/professionals/",
+                "url":         "/orienteurs/",
             },
             {
                 "icon":        "briefcase",
                 "title":       "Lawyers",
                 "anchor":      "lawyers",
                 "description": "Immigration lawyers, certified and verified",
-                "url":         "/professionals/",
+                "url":         "/avocats/",
             },
             {
                 "icon":        "chat-dots",
@@ -203,3 +203,56 @@ def profil_view(request):
         "pro_profile": pro_profile,
         "pro_form":    pro_form,
     })
+
+
+# ==============================================================================
+# EspaceProView
+# ==============================================================================
+
+@login_required
+def EspaceProView(request):
+    """Professional dashboard — only accessible to validated non-student users."""
+    user = request.user
+
+    if user.role == "student":
+        messages.warning(request, "This page is for professionals only.")
+        return redirect("/")
+
+    if not user.is_validated:
+        return render(request, "core/espace_pro.html", {"pending_validation": True})
+
+    context = {}
+
+    if user.role == "housing":
+        context["listings"] = user.listings.all()
+    elif user.role in ("lawyer", "orientation"):
+        pro_profile, _ = ProfessionalProfile.objects.get_or_create(user=user)
+        context["professional_profile"] = pro_profile
+        context["form"] = ProfessionalProfileForm(instance=pro_profile)
+
+    return render(request, "core/espace_pro.html", context)
+
+
+# ==============================================================================
+# UpdateProfileProView
+# ==============================================================================
+
+@login_required
+def UpdateProfileProView(request):
+    """Allow a validated professional to update their professional profile."""
+    user        = request.user
+    pro_profile = user.professional_profile
+
+    if request.method == "POST":
+        form = ProfessionalProfileForm(request.POST, request.FILES, instance=pro_profile)
+        if form.is_valid():
+            form.save()
+            if form.cleaned_data.get("photo"):
+                user.photo = form.cleaned_data["photo"]
+                user.save()
+            messages.success(request, "Profile updated successfully")
+            return redirect("espace-pro")
+    else:
+        form = ProfessionalProfileForm(instance=pro_profile)
+
+    return render(request, "core/update_profile_pro.html", {"form": form})

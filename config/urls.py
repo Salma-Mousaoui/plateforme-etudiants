@@ -13,7 +13,7 @@ urlpatterns = [
     # Local apps
     path('', include('core.urls')),
     path('housing/', include('housing.urls')),
-    path('professionals/', include('professionals.urls')),
+    path('', include('professionals.urls')),
     path('chat/', include('chat.urls')),
     path('reports/', include('reports.urls')),
     path('dashboard/', include('dashboard.urls')),
