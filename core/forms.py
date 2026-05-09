@@ -185,6 +185,11 @@ class LoginForm(AuthenticationForm):
 class ProfessionalProfileForm(forms.ModelForm):
     """Edit form for the professional profile section."""
 
+    photo = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(attrs={"class": "form-control"}),
+    )
+
     class Meta:
         model  = ProfessionalProfile
         fields = ["bio", "speciality", "languages", "website"]
@@ -204,6 +209,6 @@ class ProfessionalProfileForm(forms.ModelForm):
             }),
             "website": forms.URLInput(attrs={
                 "class":       "form-control",
-                "placeholder": "https://yourwebsite.com",
+                "placeholder": "https://your-website.com",
             }),
         }
