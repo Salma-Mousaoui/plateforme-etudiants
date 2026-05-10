@@ -53,6 +53,11 @@ class Message(models.Model):
     )
     content = models.TextField()
     sent_at = models.DateTimeField(auto_now_add=True)
+    attachment = models.FileField(
+        upload_to='chat_attachments/',
+        null=True,
+        blank=True,
+    )
 
     def __str__(self):
         if self.group:
