@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Listing — Elan{% endblock %}
+
+{% block content %}
+<div class="elan-container mt-4 mb-5" style="max-width:680px">
+
+  <a href="{% url 'espace-pro' %}" class="btn btn-sm btn-outline-secondary mb-4">
+    <i class="bi bi-arrow-left me-1"></i>My Space
+  </a>
+
+  <div class="card border-0 shadow-sm p-4 p-md-5" style="border-radius:16px">
+    <h1 class="fw-bold mb-1" style="font-family:var(--font-display);font-size:1.6rem;color:var(--elan-navy)">
+      <i class="bi bi-pencil-square me-2" style="color:var(--elan-blue)"></i>Edit Listing
+    </h1>
+    <p class="text-muted mb-4">{{ listing.title }}</p>
+
+    <form method="POST" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+
+      <div class="mb-3">
+        <label for="{{ form.title.id_for_label }}" class="form-label fw-semibold small">
+          {{ form.title.label }}
+        </label>
+        {{ form.title }}
+        {% for error in form.title.errors %}
+          <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="mb-3">
+        <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold small">
+          {{ form.description.label }}
+        </label>
+        {{ form.description }}
+        {% for error in form.description.errors %}
+          <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="mb-3">
+        <label for="{{ form.type.id_for_label }}" class="form-label fw-semibold small">
+          {{ form.type.label }}
+        </label>
+        {{ form.type }}
+        {% for error in form.type.errors %}
+          <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="mb-3">
+        <label for="{{ form.price.id_for_label }}" class="form-label fw-semibold small">
+          {{ form.price.label }}
+        </label>
+        {{ form.price }}
+        {% for error in form.price.errors %}
+          <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="mb-3">
+        <label for="{{ form.city.id_for_label }}" class="form-label fw-semibold small">
+          {{ form.city.label }}
+        </label>
+        {{ form.city }}
+        {% for error in form.city.errors %}
+          <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label fw-semibold small">Photo</label>
+        {{ form.photo }}
+        {% for error in form.photo.errors %}
+          <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+        {% endfor %}
+        {% if listing.photo %}
+          <div class="mt-2">
+            <small class="text-muted">Current photo:</small><br>
+            <img src="{{ listing.photo.url }}"
+                 alt="Current photo"
+                 style="max-width:200px;border-radius:8px;margin-top:8px">
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="d-flex gap-2 mt-2">
+        <button type="submit" class="btn btn-primary flex-grow-1 py-2"
+                style="border-radius:10px;font-weight:600">
+          <i class="bi bi-save me-1"></i>Save changes
+        </button>
+        <a href="{% url 'espace-pro' %}" class="btn btn-outline-secondary py-2"
+           style="border-radius:10px">
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

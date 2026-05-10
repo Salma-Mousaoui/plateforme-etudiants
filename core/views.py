@@ -16,6 +16,7 @@ from django.shortcuts import render, redirect
 from django.views import View
 from django.views.generic import TemplateView
 
+from chat.models import Message
 from .forms import LoginForm, ProfessionalProfileForm, RegisterForm
 from .models import ProfessionalProfile
 
@@ -214,21 +215,28 @@ def EspaceProView(request):
     """Professional dashboard — only accessible to validated non-student users."""
     user = request.user
 
-    if user.role == "student":
-        messages.warning(request, "This page is for professionals only.")
+    if user.role == "student" or not user.is_validated:
+        messages.warning(request, "Your account is pending admin validation")
         return redirect("/")
-
-    if not user.is_validated:
-        return render(request, "core/espace_pro.html", {"pending_validation": True})
 
     context = {}
 
     if user.role == "housing":
-        context["listings"] = user.listings.all()
+        listings = user.listings.all()
+        context["listings"]           = listings
+        context["listings_published"] = listings.filter(is_approved=True).count()
+        context["listings_pending"]   = listings.filter(is_approved=False).count()
     elif user.role in ("lawyer", "orientation"):
         pro_profile, _ = ProfessionalProfile.objects.get_or_create(user=user)
         context["professional_profile"] = pro_profile
         context["form"] = ProfessionalProfileForm(instance=pro_profile)
+
+    context["recent_messages"] = (
+        Message.objects
+        .filter(receiver=user)
+        .select_related("sender")
+        .order_by("-sent_at")[:5]
+    )
 
     return render(request, "core/espace_pro.html", context)
 

@@ -15,7 +15,7 @@
     </h1>
     <p class="text-muted mb-4">Your listing will be reviewed by an admin before it goes live.</p>
 
-    <form method="post" novalidate>
+    <form method="post" enctype="multipart/form-data" novalidate>
       {% csrf_token %}
 
       {% for field in form %}

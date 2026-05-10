@@ -81,7 +81,7 @@ class CreateListingView(View):
     def post(self, request):
         if not self._check_permission(request):
             return redirect("listings")
-        form = HousingListingForm(request.POST)
+        form = HousingListingForm(request.POST, request.FILES)
         if form.is_valid():
             listing = form.save(commit=False)
             listing.owner = request.user
@@ -115,3 +115,24 @@ class ReportListingView(View):
         )
         messages.success(request, "Report submitted. Thank you for helping keep the platform safe.")
         return redirect("listing-detail", pk=pk)
+
+
+@login_required
+def EditListingView(request, pk):
+    listing = get_object_or_404(HousingListing, pk=pk, owner=request.user)
+    form = HousingListingForm(request.POST or None, request.FILES or None, instance=listing)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Listing updated successfully")
+        return redirect("espace-pro")
+    return render(request, "housing/modifier_annonce.html", {"form": form, "listing": listing})
+
+
+@login_required
+def DeleteListingView(request, pk):
+    listing = get_object_or_404(HousingListing, pk=pk, owner=request.user)
+    if request.method == "POST":
+        listing.delete()
+        messages.success(request, "Listing deleted successfully")
+        return redirect("espace-pro")
+    return render(request, "housing/confirmer_suppression.html", {"listing": listing})
