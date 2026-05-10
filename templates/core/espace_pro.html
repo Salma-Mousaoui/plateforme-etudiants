@@ -4,26 +4,6 @@
 {% block title %}My Professional Space — Elan{% endblock %}
 
 {% block content %}
-
-{% if pending_validation %}
-<div class="elan-container mt-5 mb-5">
-  <div class="d-flex flex-column align-items-center justify-content-center" style="min-height:50vh">
-    <div class="card border-0 shadow-sm p-5 text-center" style="border-radius:16px;max-width:520px;width:100%">
-      <div class="mb-4" style="font-size:3rem;line-height:1">⏳</div>
-      <h2 class="fw-bold mb-3" style="font-family:var(--font-display);color:var(--elan-navy)">
-        Account Pending Validation
-      </h2>
-      <p class="text-muted mb-4">
-        Your account is pending admin validation. You will be notified once approved.
-      </p>
-      <a href="{% url 'landing' %}" class="btn btn-outline-primary" style="border-radius:10px">
-        <i class="bi bi-arrow-left me-1"></i>Back to Home
-      </a>
-    </div>
-  </div>
-</div>
-
-{% else %}
 <div class="elan-container mt-4 mb-5">
 
   <!-- ════════════════════════════════════════════════════════════
@@ -53,14 +33,13 @@
   </div>
 
   <!-- ════════════════════════════════════════════════════════════
-       HOUSING SECTION — MY LISTINGS
+       HOUSING — MY LISTINGS
        ════════════════════════════════════════════════════════════ -->
   {% if request.user.role == "housing" %}
 
   <div class="card border-0 shadow-sm mb-4" style="border-radius:16px;overflow:hidden">
     <div class="card-body p-4">
 
-      <!-- Section header -->
       <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
         <h4 class="fw-bold mb-0" style="font-family:var(--font-display);color:var(--elan-navy)">
           <i class="bi bi-building me-2" style="color:var(--elan-blue)"></i>My Listings
@@ -70,28 +49,18 @@
         </a>
       </div>
 
-      <!-- Stats row -->
       {% if listings %}
-        <div class="d-flex gap-3 mb-4 flex-wrap">
-          {% regroup listings|dictsortreversed:"is_approved" by is_approved as approval_groups %}
-          {% for group in approval_groups %}
-            {% if group.grouper %}
-              <span class="fw-semibold" style="color:#16A34A">
-                <i class="bi bi-check-circle-fill me-1"></i>{{ group.list|length }}
-                listing{{ group.list|length|pluralize }} published
-              </span>
-            {% else %}
-              <span class="fw-semibold" style="color:#D97706">
-                <i class="bi bi-clock-fill me-1"></i>{{ group.list|length }}
-                pending approval
-              </span>
-            {% endif %}
-          {% endfor %}
+        <div class="d-flex gap-4 mb-4 flex-wrap">
+          <span class="fw-semibold" style="color:#16A34A">
+            <i class="bi bi-check-circle-fill me-1"></i>{{ listings_published }}
+            listing{{ listings_published|pluralize }} published
+          </span>
+          <span class="fw-semibold" style="color:#D97706">
+            <i class="bi bi-clock-fill me-1"></i>{{ listings_pending }}
+            pending approval
+          </span>
         </div>
-      {% endif %}
 
-      <!-- Listings table -->
-      {% if listings %}
         <div class="table-responsive">
           <table class="table table-striped table-hover align-middle mb-0">
             <thead style="background:var(--elan-blue-light)">
@@ -108,7 +77,7 @@
                 <tr>
                   <td class="px-3 fw-semibold">{{ listing.title }}</td>
                   <td class="text-muted">{{ listing.city }}</td>
-                  <td class="fw-semibold">{{ listing.price }}€</td>
+                  <td class="fw-semibold">{{ listing.price }}&euro;</td>
                   <td>
                     {% if listing.is_approved %}
                       <span class="badge bg-success">Published</span>
@@ -117,13 +86,12 @@
                     {% endif %}
                   </td>
                   <td>
-                    <a href="/logements/{{ listing.pk }}/modifier/"
+                    <a href="{% url 'edit-listing' listing.pk %}"
                        class="btn btn-outline-primary btn-sm me-1" style="border-radius:6px">
                       <i class="bi bi-pencil me-1"></i>Edit
                     </a>
-                    <a href="/logements/{{ listing.pk }}/supprimer/"
-                       class="btn btn-outline-danger btn-sm" style="border-radius:6px"
-                       onclick="return confirm('Delete this listing?')">
+                    <a href="{% url 'delete-listing' listing.pk %}"
+                       class="btn btn-outline-danger btn-sm" style="border-radius:6px">
                       <i class="bi bi-trash me-1"></i>Delete
                     </a>
                   </td>
@@ -132,6 +100,7 @@
             </tbody>
           </table>
         </div>
+
       {% else %}
         <div class="alert alert-info d-flex align-items-center gap-2" style="border-radius:10px">
           <i class="bi bi-info-circle-fill flex-shrink-0"></i>
@@ -143,7 +112,7 @@
   </div>
 
   <!-- ════════════════════════════════════════════════════════════
-       LAWYER / ORIENTATION SECTION — MY PROFILE
+       LAWYER / ORIENTATION — MY PROFESSIONAL PROFILE
        ════════════════════════════════════════════════════════════ -->
   {% elif request.user.role == "lawyer" or request.user.role == "orientation" %}
 
@@ -158,12 +127,11 @@
 
         <!-- LEFT — Edit form -->
         <div class="col-md-6">
-          <h6 class="fw-semibold text-muted text-uppercase small mb-3 ls-wide">
+          <h6 class="fw-semibold text-muted text-uppercase small mb-3">
             <i class="bi bi-pencil-square me-1"></i>Edit my profile
           </h6>
           <form method="post" action="{% url 'update-profile-pro' %}" enctype="multipart/form-data" novalidate>
             {% csrf_token %}
-
             <div class="mb-3">
               <label class="form-label fw-semibold small">Bio / Services</label>
               {{ form.bio }}
@@ -184,7 +152,6 @@
               <label class="form-label fw-semibold small">Profile photo</label>
               {{ form.photo }}
             </div>
-
             <button type="submit" class="btn btn-primary w-100 fw-semibold py-2" style="border-radius:10px">
               <i class="bi bi-save me-1"></i>Save changes
             </button>
@@ -193,13 +160,12 @@
 
         <!-- RIGHT — Preview card -->
         <div class="col-md-6">
-          <h6 class="fw-semibold text-muted text-uppercase small mb-3 ls-wide">
+          <h6 class="fw-semibold text-muted text-uppercase small mb-3">
             <i class="bi bi-eye me-1"></i>How students see your profile
           </h6>
 
           <div class="card border-0 shadow-sm p-4 text-center" style="border-radius:14px">
 
-            <!-- Photo or initials -->
             {% if request.user.photo %}
               <img src="{{ request.user.photo.url }}"
                    class="rounded-circle mx-auto mb-3 object-fit-cover"
@@ -214,12 +180,10 @@
               </div>
             {% endif %}
 
-            <!-- Name -->
             <h5 class="fw-bold mb-2" style="font-family:var(--font-display);color:var(--elan-navy)">
               {{ request.user.get_full_name }}
             </h5>
 
-            <!-- Role badge -->
             {% if request.user.role == "lawyer" %}
               <span class="badge bg-primary px-3 py-2 mb-3">
                 <i class="bi bi-briefcase me-1"></i>Lawyer
@@ -230,7 +194,6 @@
               </span>
             {% endif %}
 
-            <!-- Bio -->
             {% if professional_profile.bio %}
               <p class="text-muted small mb-3" style="white-space:pre-line;line-height:1.6">
                 {{ professional_profile.bio|truncatewords:30 }}
@@ -239,7 +202,6 @@
               <p class="text-muted small fst-italic mb-3">No bio yet.</p>
             {% endif %}
 
-            <!-- Speciality -->
             {% if professional_profile.speciality %}
               <div class="mb-2">
                 <span class="badge rounded-pill px-3 py-2"
@@ -249,7 +211,6 @@
               </div>
             {% endif %}
 
-            <!-- Languages -->
             {% if professional_profile.languages %}
               <p class="text-muted small mb-3">
                 <i class="bi bi-translate me-1"></i>{{ professional_profile.languages }}
@@ -285,37 +246,35 @@
         </a>
       </div>
 
-      {% if recent_conversations %}
+      {% if recent_messages %}
         <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
-          {% for conv in recent_conversations %}
+          {% for msg in recent_messages %}
             <li class="d-flex align-items-center gap-3 p-3 rounded"
                 style="background:#F8FAFC;border:1px solid #E2E8F0">
 
-              <!-- Sender avatar -->
-              {% if conv.sender.photo %}
-                <img src="{{ conv.sender.photo.url }}"
+              {% if msg.sender.photo %}
+                <img src="{{ msg.sender.photo.url }}"
                      class="rounded-circle object-fit-cover flex-shrink-0"
-                     style="width:42px;height:42px;"
-                     alt="{{ conv.sender.get_full_name }}">
+                     style="width:42px;height:42px"
+                     alt="{{ msg.sender.get_full_name }}">
               {% else %}
                 <div class="rounded-circle d-flex align-items-center justify-content-center
                             fw-bold text-white flex-shrink-0"
                      style="width:42px;height:42px;background:var(--elan-blue);font-size:.9rem">
-                  {{ conv.sender.first_name|first|upper }}{{ conv.sender.last_name|first|upper }}
+                  {{ msg.sender.first_name|first|upper }}{{ msg.sender.last_name|first|upper }}
                 </div>
               {% endif %}
 
-              <!-- Message info -->
               <div class="flex-grow-1 min-w-0">
                 <div class="d-flex align-items-center justify-content-between">
                   <span class="fw-semibold small" style="color:var(--elan-navy)">
-                    {{ conv.sender.get_full_name }}
+                    {{ msg.sender.get_full_name }}
                   </span>
                   <span class="text-muted" style="font-size:.75rem">
-                    {{ conv.timestamp|timesince }} ago
+                    {{ msg.sent_at|timesince }} ago
                   </span>
                 </div>
-                <p class="text-muted small mb-0 text-truncate">{{ conv.preview }}</p>
+                <p class="text-muted small mb-0 text-truncate">{{ msg.content }}</p>
               </div>
 
             </li>
@@ -331,6 +290,4 @@
   </div>
 
 </div>
-{% endif %}
-
 {% endblock %}
