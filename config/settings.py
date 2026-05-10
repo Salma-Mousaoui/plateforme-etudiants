@@ -135,15 +135,14 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # ==============================================================================
-# DJANGO CHANNELS + REDIS
+# DJANGO CHANNELS
+# InMemoryChannelLayer for development (single process, no Redis required).
+# Switch to RedisChannelLayer before deploying to production.
 # ==============================================================================
 
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [config('REDIS_URL', default='redis://localhost:6379')],
-        },
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
 
