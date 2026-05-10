@@ -1,12 +1,81 @@
-"""
-Views for the chat app.
-"""
-
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.db.models import Q
+from django.shortcuts import get_object_or_404, render
+
+from .models import ChatGroup, Message
+
+User = get_user_model()
+
+
+def get_conversations(user):
+    all_messages = (
+        Message.objects.filter(
+            Q(sender=user) | Q(receiver=user),
+            group__isnull=True,
+        )
+        .select_related("sender", "receiver")
+        .order_by("-sent_at")
+    )
+
+    seen = set()
+    conversations = []
+    for msg in all_messages:
+        other = msg.receiver if msg.sender == user else msg.sender
+        if other and other.id not in seen:
+            seen.add(other.id)
+            unread = Message.objects.filter(
+                sender=other,
+                receiver=user,
+                is_read=False,
+            ).count()
+            conversations.append({
+                "other_user": other,
+                "last_message": msg.content,   # plain string
+                "last_time": msg.sent_at,       # datetime
+                "unread_count": unread,
+            })
+    return conversations
 
 
 @login_required
-def index(request):
-    """Community chat page — requires authentication."""
-    return render(request, 'chat/index.html')
+def ChatListView(request):
+    conversations = get_conversations(request.user)
+    return render(request, "chat/liste_chats.html", {"conversations": conversations})
+
+
+@login_required
+def PrivateChatView(request, other_user_id):
+    user = request.user
+    other_user = get_object_or_404(User, pk=other_user_id)
+
+    Message.objects.filter(
+        sender=other_user, receiver=user, is_read=False
+    ).update(is_read=True)
+
+    messages_historique = list(
+        Message.objects.filter(
+            Q(sender=user, receiver=other_user) | Q(sender=other_user, receiver=user)
+        ).order_by("sent_at")
+    )[-50:]
+
+    return render(request, "chat/chat_prive.html", {
+        "other_user": other_user,
+        "messages_historique": messages_historique,
+        "conversations": get_conversations(user),
+    })
+
+
+@login_required
+def GroupChatView(request, group_id):
+    user = request.user
+    group = get_object_or_404(ChatGroup, pk=group_id)
+    if user not in group.members.all():
+        group.members.add(user)
+    messages = list(
+        Message.objects.filter(group=group).order_by("sent_at")
+    )[-50:]
+    return render(request, "chat/chat_groupe.html", {
+        "group": group,
+        "messages": messages,
+    })

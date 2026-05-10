@@ -34,15 +34,16 @@ class Message(models.Model):
     sender = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='sent_messages',
+        related_name='sent',
     )
     receiver = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='received_messages',
+        on_delete=models.SET_NULL,
+        related_name='received',
         null=True,
         blank=True,
     )
+    is_read = models.BooleanField(default=False)
     group = models.ForeignKey(
         ChatGroup,
         on_delete=models.CASCADE,

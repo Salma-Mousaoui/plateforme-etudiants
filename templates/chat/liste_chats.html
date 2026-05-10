@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Conversations — Elan{% endblock %}
+
+{% block extra_css %}
+<style>
+  main { padding: 0 !important; }
+
+  .chat-layout {
+    display: flex;
+    height: calc(100vh - 60px);
+    overflow: hidden;
+  }
+
+  /* ── Left sidebar ─────────────────────────────── */
+  .chat-sidebar {
+    width: 280px;
+    min-width: 280px;
+    border-right: 1px solid #e5e7eb;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-title {
+    padding: 16px;
+    font-weight: 700;
+    font-size: 15px;
+    border-bottom: 1px solid #e5e7eb;
+    flex-shrink: 0;
+  }
+  .conv-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    text-decoration: none;
+    color: inherit;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background 0.15s;
+  }
+  .conv-item:hover  { background: #f3f4f6; color: inherit; }
+  .conv-item.active { background: #eff6ff; color: inherit; }
+
+  .avatar-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #1E3A5F;
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .avatar-img {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .conv-info { flex: 1; min-width: 0; }
+  .conv-name {
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #111827;
+  }
+  .conv-preview {
+    font-size: 13px;
+    color: #6b7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .conv-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .conv-time { font-size: 11px; color: #9ca3af; }
+
+  /* ── Role badges ──────────────────────────────── */
+  .role-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.5;
+  }
+  .role-student     { background: #16a34a; }
+  .role-lawyer      { background: #2563eb; }
+  .role-orientation { background: #f97316; }
+  .role-housing     { background: #7c3aed; }
+  .role-admin       { background: #6b7280; }
+
+  /* ── Right placeholder ────────────────────────── */
+  .chat-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f9fafb;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-layout">
+
+  <!-- LEFT: conversation list -->
+  <div class="chat-sidebar">
+    <div class="sidebar-title">My conversations</div>
+
+    {% for conv in conversations %}
+      {% with other=conv.other_user %}
+        <a href="{% url 'private-chat' other.id %}" class="conv-item">
+
+          {% if other.photo %}
+            <img src="{{ other.photo.url }}" alt="{{ other.get_full_name }}" class="avatar-img">
+          {% else %}
+            <div class="avatar-circle">
+              {% if other.first_name %}{{ other.first_name|slice:"0:1"|upper }}{{ other.last_name|slice:"0:1"|upper }}{% else %}{{ other.username|slice:"0:1"|upper }}{% endif %}
+            </div>
+          {% endif %}
+
+          <div class="conv-info">
+            <div class="conv-name {% if conv.unread_count %}fw-bold{% endif %}">
+              {{ other.get_full_name|default:other.username }}
+            </div>
+            <div class="mb-1">
+              <span class="role-badge role-{{ other.role }}">
+                {% if other.role == 'student' %}Student
+                {% elif other.role == 'lawyer' %}Lawyer
+                {% elif other.role == 'orientation' %}Counselor
+                {% elif other.role == 'housing' %}Housing
+                {% elif other.role == 'admin' %}Admin
+                {% else %}{{ other.role }}
+                {% endif %}
+              </span>
+            </div>
+            <div class="conv-preview {% if conv.unread_count %}fw-semibold text-dark{% endif %}">
+              {{ conv.last_message|truncatechars:40 }}
+            </div>
+          </div>
+
+          <div class="conv-meta">
+            <span class="conv-time">{{ conv.last_time|date:"d/m H:i" }}</span>
+            {% if conv.unread_count %}
+              <span class="badge rounded-pill bg-danger" style="font-size:10px;">
+                {{ conv.unread_count }}
+              </span>
+            {% endif %}
+          </div>
+
+        </a>
+      {% endwith %}
+    {% empty %}
+      <p class="text-muted p-3 small">No conversations yet.</p>
+    {% endfor %}
+  </div>
+
+  <!-- RIGHT: placeholder -->
+  <div class="chat-main">
+    <div class="text-center">
+      <i class="bi bi-chat-dots" style="font-size: 3.5rem; color: #d1d5db;"></i>
+      <p class="mt-3 text-muted">Select a conversation to start chatting</p>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,466 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ other_user.get_full_name }} — Elan{% endblock %}
+
+{% block extra_css %}
+<style>
+  main { padding: 0 !important; }
+
+  /* ── Page layout ──────────────────────────────── */
+  .chat-layout {
+    display: flex;
+    height: calc(100vh - 60px);
+    overflow: hidden;
+  }
+
+  /* ── Left sidebar ─────────────────────────────── */
+  .chat-sidebar {
+    width: 280px;
+    min-width: 280px;
+    border-right: 1px solid #e5e7eb;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-title {
+    padding: 16px;
+    font-weight: 700;
+    font-size: 15px;
+    border-bottom: 1px solid #e5e7eb;
+    flex-shrink: 0;
+  }
+  .conv-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    text-decoration: none;
+    color: inherit;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background 0.15s;
+  }
+  .conv-item:hover  { background: #f3f4f6; color: inherit; }
+  .conv-item.active { background: #eff6ff; color: inherit; }
+
+  .avatar-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #1E3A5F;
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .avatar-img {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .conv-info { flex: 1; min-width: 0; }
+  .conv-name {
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #111827;
+  }
+  .conv-preview {
+    font-size: 13px;
+    color: #6b7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .conv-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .conv-time { font-size: 11px; color: #9ca3af; }
+
+  /* ── Role badges ──────────────────────────────── */
+  .role-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.5;
+  }
+  .role-student     { background: #16a34a; }
+  .role-lawyer      { background: #2563eb; }
+  .role-orientation { background: #f97316; }
+  .role-housing     { background: #7c3aed; }
+  .role-admin       { background: #6b7280; }
+
+  /* ── Right column ─────────────────────────────── */
+  .chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    background: #f9fafb;
+  }
+  .chat-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fff;
+    flex-shrink: 0;
+  }
+  .header-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #1E3A5F;
+    color: #fff;
+    font-weight: 700;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .header-avatar img {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  /* ── Messages container ───────────────────────── */
+  #messages-container {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 16px 0;
+  }
+
+  /* ── Message rows ─────────────────────────────── */
+  .msg-row {
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 12px;
+  }
+  .msg-row-right {
+    justify-content: flex-end;
+    padding-right: 16px;
+    padding-left: 60px;
+  }
+  .msg-row-left {
+    justify-content: flex-start;
+    padding-left: 16px;
+    padding-right: 60px;
+  }
+
+  /* ── Bubble wrapper ───────────────────────────── */
+  .bubble-wrap {
+    display: flex;
+    flex-direction: column;
+    max-width: 60%;
+    min-width: 0;
+  }
+  .bubble-wrap-right { align-items: flex-end; }
+  .bubble-wrap-left  { align-items: flex-start; }
+
+  /* ── Bubble ───────────────────────────────────── */
+  .bubble {
+    padding: 10px 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  .bubble-right {
+    background: #2563EB;
+    color: #fff;
+    border-radius: 18px 18px 4px 18px;
+  }
+  .bubble-left {
+    background: #f3f4f6;
+    color: #1f2937;
+    border-radius: 18px 18px 18px 4px;
+  }
+  .bubble-time {
+    font-size: 11px;
+    opacity: 0.75;
+    margin-top: 4px;
+  }
+  .bubble-time-right { text-align: right; }
+  .bubble-time-left  { text-align: left; }
+
+  /* ── Read receipt ─────────────────────────────── */
+  .receipt { font-size: 12px; margin-top: 3px; text-align: right; }
+  .receipt-read   { color: #2563EB; }
+  .receipt-unread { color: #9ca3af; }
+
+  /* ── Send bar ─────────────────────────────────── */
+  .send-bar {
+    display: flex;
+    gap: 8px;
+    padding: 16px;
+    border-top: 1px solid #e5e7eb;
+    background: #fff;
+    flex-shrink: 0;
+  }
+
+  /* ── WS status banner ─────────────────────────── */
+  #ws-status {
+    display: none;
+    text-align: center;
+    font-size: 12px;
+    padding: 4px;
+    background: #fef3c7;
+    color: #92400e;
+    flex-shrink: 0;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-layout">
+
+  <!-- LEFT: conversation list -->
+  <div class="chat-sidebar">
+    <div class="sidebar-title">My conversations</div>
+
+    {% for conv in conversations %}
+      {% with other=conv.other_user %}
+        <a href="/chat/prive/{{ other.id }}/"
+           class="conv-item {% if other.id == other_user.id %}active{% endif %}">
+
+          {% if other.photo %}
+            <img src="{{ other.photo.url }}" alt="{{ other.get_full_name }}" class="avatar-img">
+          {% else %}
+            <div class="avatar-circle">
+              {% if other.first_name %}{{ other.first_name|slice:"0:1"|upper }}{{ other.last_name|slice:"0:1"|upper }}{% else %}{{ other.username|slice:"0:1"|upper }}{% endif %}
+            </div>
+          {% endif %}
+
+          <div class="conv-info">
+            <div class="conv-name {% if conv.unread_count %}fw-bold{% endif %}">
+              {{ other.get_full_name|default:other.username }}
+            </div>
+            <div class="mb-1">
+              <span class="role-badge role-{{ other.role }}">
+                {% if other.role == 'student' %}Student
+                {% elif other.role == 'lawyer' %}Lawyer
+                {% elif other.role == 'orientation' %}Counselor
+                {% elif other.role == 'housing' %}Housing
+                {% elif other.role == 'admin' %}Admin
+                {% else %}{{ other.role }}
+                {% endif %}
+              </span>
+            </div>
+            <div class="conv-preview {% if conv.unread_count %}fw-semibold text-dark{% endif %}">
+              {{ conv.last_message|truncatechars:40 }}
+            </div>
+          </div>
+
+          <div class="conv-meta">
+            <span class="conv-time">{{ conv.last_time|date:"d/m H:i" }}</span>
+            {% if conv.unread_count %}
+              <span class="badge rounded-pill bg-danger" style="font-size:10px;">
+                {{ conv.unread_count }}
+              </span>
+            {% endif %}
+          </div>
+
+        </a>
+      {% endwith %}
+    {% empty %}
+      <p class="text-muted p-3 small">No conversations yet.</p>
+    {% endfor %}
+  </div>
+
+  <!-- RIGHT -->
+  <div class="chat-main">
+
+    <div class="chat-header">
+      <div class="header-avatar">
+        {% if other_user.photo %}
+          <img src="{{ other_user.photo.url }}" alt="{{ other_user.get_full_name }}">
+        {% else %}
+          {% if other_user.first_name %}{{ other_user.first_name|slice:"0:1"|upper }}{{ other_user.last_name|slice:"0:1"|upper }}{% else %}{{ other_user.username|slice:"0:1"|upper }}{% endif %}
+        {% endif %}
+      </div>
+      <div>
+        <div class="fw-bold">{{ other_user.get_full_name|default:other_user.username }}</div>
+        <span class="role-badge role-{{ other_user.role }}" style="margin-top:2px;">
+          {% if other_user.role == 'student' %}Student
+          {% elif other_user.role == 'lawyer' %}Lawyer
+          {% elif other_user.role == 'orientation' %}Counselor
+          {% elif other_user.role == 'housing' %}Housing
+          {% elif other_user.role == 'admin' %}Admin
+          {% else %}{{ other_user.role }}
+          {% endif %}
+        </span>
+      </div>
+      <a href="/professionnel/{{ other_user.id }}/"
+         class="btn btn-outline-secondary btn-sm ms-auto">
+        View profile
+      </a>
+    </div>
+
+    <div id="ws-status">Connection lost — reconnecting…</div>
+
+    <!-- Messages -->
+    <div id="messages-container">
+      {% for msg in messages_historique %}
+        {% if msg.sender == request.user %}
+          <div class="msg-row msg-row-right">
+            <div class="bubble-wrap bubble-wrap-right">
+              <div class="bubble bubble-right">
+                {{ msg.content }}
+                <div class="bubble-time bubble-time-right">{{ msg.sent_at|time:"H:i" }}</div>
+              </div>
+              <div class="receipt">
+                {% if msg.is_read %}
+                  <span class="receipt-read">✓✓</span>
+                {% else %}
+                  <span class="receipt-unread">✓</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <div class="msg-row msg-row-left">
+            <div class="bubble-wrap bubble-wrap-left">
+              <div class="bubble bubble-left">
+                {{ msg.content }}
+                <div class="bubble-time bubble-time-left">{{ msg.sent_at|time:"H:i" }}</div>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      {% empty %}
+        <div class="text-center text-muted mt-5">Start the conversation!</div>
+      {% endfor %}
+    </div>
+
+    <!-- Send bar -->
+    <div class="send-bar">
+      <input type="text" id="message-input" class="form-control"
+             placeholder="Write a message..." autocomplete="off">
+      <button id="send-btn" class="btn btn-primary">
+        <i class="bi bi-send-fill"></i>
+      </button>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const ME       = {{ request.user.id }};
+  const OTHER_ID = {{ other_user.id }};
+  const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+  const wsUrl    = `${wsScheme}://${window.location.host}/ws/chat/prive/${OTHER_ID}/`;
+
+  let chatSocket;
+
+  function connect() {
+    chatSocket = new WebSocket(wsUrl);
+
+    chatSocket.onopen = function () {
+      document.getElementById("ws-status").style.display = "none";
+    };
+
+    chatSocket.onmessage = function (e) {
+      const data = JSON.parse(e.data);
+      if (data.sender_id !== ME) {
+        appendMessage(data.message, data.sender_id, data.sent_at, data.is_read ?? false);
+        scrollToBottom();
+      }
+    };
+
+    chatSocket.onerror = function (err) {
+      console.error("WebSocket error:", err);
+    };
+
+    chatSocket.onclose = function () {
+      document.getElementById("ws-status").style.display = "block";
+      setTimeout(connect, 3000);
+    };
+  }
+
+  connect();
+
+  function appendMessage(message, senderId, sentAt, isRead) {
+    const isMe = senderId === ME;
+    const time = sentAt
+      ? new Date(sentAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      : "";
+
+    const receipt = isMe
+      ? `<div class="receipt">
+           <span class="${isRead ? "receipt-read" : "receipt-unread"}">${isRead ? "✓✓" : "✓"}</span>
+         </div>`
+      : "";
+
+    const html = `
+      <div class="msg-row ${isMe ? "msg-row-right" : "msg-row-left"}">
+        <div class="bubble-wrap ${isMe ? "bubble-wrap-right" : "bubble-wrap-left"}">
+          <div class="bubble ${isMe ? "bubble-right" : "bubble-left"}">
+            ${esc(message)}
+            <div class="bubble-time ${isMe ? "bubble-time-right" : "bubble-time-left"}">${time}</div>
+          </div>
+          ${receipt}
+        </div>
+      </div>`;
+
+    document.getElementById("messages-container").insertAdjacentHTML("beforeend", html);
+  }
+
+  function scrollToBottom() {
+    const c = document.getElementById("messages-container");
+    c.scrollTop = c.scrollHeight;
+  }
+
+  function esc(str) {
+    return String(str)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  document.getElementById("send-btn").onclick = function () {
+    const input = document.getElementById("message-input");
+    const msg   = input.value.trim();
+    if (!msg) return;
+    if (chatSocket.readyState !== WebSocket.OPEN) {
+      alert("Connection lost, please wait…");
+      return;
+    }
+    chatSocket.send(JSON.stringify({ message: msg, sender_id: ME }));
+    appendMessage(msg, ME, new Date().toISOString(), false);
+    scrollToBottom();
+    input.value = "";
+  };
+
+  document.getElementById("message-input").addEventListener("keypress", function (e) {
+    if (e.key === "Enter") document.getElementById("send-btn").click();
+  });
+
+  scrollToBottom();
+</script>
+{% endblock %}

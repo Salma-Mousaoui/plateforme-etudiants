@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ group.name }} — Elan{% endblock %}
+
+{% block extra_css %}
+<style>
+  main { padding: 0 !important; }
+
+  .chat-layout {
+    display: flex;
+    height: calc(100vh - 60px);
+    overflow: hidden;
+  }
+
+  /* ── Left column: group info + members ──────── */
+  .chat-sidebar {
+    width: 280px;
+    min-width: 280px;
+    border-right: 1px solid #e5e7eb;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .sidebar-group-header {
+    padding: 16px;
+    border-bottom: 1px solid #e5e7eb;
+    flex-shrink: 0;
+  }
+  .member-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 16px;
+  }
+  .member-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .member-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  /* ── Right column ────────────────────────────── */
+  .chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #f9fafb;
+    min-width: 0;
+  }
+  .chat-header {
+    padding: 12px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .group-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #1E3A5F;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* Messages */
+  .messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .bubble-wrapper {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  .bubble-wrapper.mine { flex-direction: row-reverse; }
+
+  .bubble {
+    max-width: 65%;
+    padding: 10px 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+  .bubble.mine {
+    background: #1E3A5F;
+    color: #fff;
+    border-radius: 18px 18px 4px 18px;
+  }
+  .bubble.theirs {
+    background: #fff;
+    color: #111827;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px 18px 18px 4px;
+  }
+  .bubble-sender {
+    font-size: 11px;
+    color: #6b7280;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .bubble-meta {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 3px;
+  }
+  .bubble-meta.mine { text-align: right; }
+
+  .bubble-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #1E3A5F;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* Input bar */
+  .chat-input-bar {
+    padding: 12px 16px;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    flex-shrink: 0;
+  }
+  .chat-input-bar textarea {
+    flex: 1;
+    border: 1px solid #e5e7eb;
+    border-radius: 22px;
+    padding: 10px 16px;
+    resize: none;
+    font-size: 14px;
+    outline: none;
+    max-height: 120px;
+    overflow-y: auto;
+    font-family: inherit;
+  }
+  .chat-input-bar textarea:focus { border-color: #1E3A5F; }
+  .btn-send {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #1E3A5F;
+    color: #fff;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .btn-send:hover { background: #2563eb; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-layout">
+
+  <!-- LEFT: group info + member list (280 px) -->
+  <div class="chat-sidebar">
+    <div class="sidebar-group-header">
+      <div class="fw-bold" style="font-size:15px;">{{ group.name }}</div>
+      {% if group.city %}
+        <small class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ group.city }}</small>
+      {% endif %}
+    </div>
+
+    <div class="p-3">
+      <p class="text-muted small fw-semibold mb-2" style="letter-spacing:.05em;">
+        MEMBRES ({{ group.members.count }})
+      </p>
+      {% for member in group.members.all %}
+        <div class="member-row">
+          {% if member.photo %}
+            <img src="{{ member.photo.url }}" alt="{{ member.get_full_name }}" class="member-img">
+          {% else %}
+            <div class="member-avatar">
+              {% if member.first_name %}{{ member.first_name|slice:"0:1"|upper }}{{ member.last_name|slice:"0:1"|upper }}{% else %}{{ member.username|slice:"0:1"|upper }}{% endif %}
+            </div>
+          {% endif %}
+          <span class="small flex-grow-1">{{ member.get_full_name|default:member.username }}</span>
+          {% if member == request.user %}
+            <span class="badge bg-light text-secondary" style="font-size:10px;">Moi</span>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- RIGHT: header + messages + send bar -->
+  <div class="chat-main">
+
+    <div class="chat-header">
+      <div class="group-avatar">{{ group.name|slice:"0:1"|upper }}</div>
+      <div>
+        <div class="fw-semibold" style="font-size:15px;">{{ group.name }}</div>
+        {% if group.city %}<small class="text-muted">{{ group.city }}</small>{% endif %}
+      </div>
+    </div>
+
+    <div class="messages-area" id="messages-area">
+      {% for msg in messages %}
+        {% if msg.sender == request.user %}
+          <div class="bubble-wrapper mine">
+            <div>
+              <div class="bubble mine">{{ msg.content }}</div>
+              <div class="bubble-meta mine">{{ msg.sent_at|date:"H:i" }}</div>
+            </div>
+          </div>
+        {% else %}
+          <div class="bubble-wrapper">
+            <div class="bubble-avatar">
+              {% if msg.sender.first_name %}{{ msg.sender.first_name|slice:"0:1"|upper }}{% else %}{{ msg.sender.username|slice:"0:1"|upper }}{% endif %}
+            </div>
+            <div>
+              <div class="bubble-sender">{{ msg.sender.get_full_name|default:msg.sender.username }}</div>
+              <div class="bubble theirs">{{ msg.content }}</div>
+              <div class="bubble-meta">{{ msg.sent_at|date:"H:i" }}</div>
+            </div>
+          </div>
+        {% endif %}
+      {% empty %}
+        <div class="text-center text-muted mt-auto mb-auto">
+          <i class="bi bi-chat-dots" style="font-size:2.5rem;color:#d1d5db;"></i>
+          <p class="mt-2 small">Soyez le premier à écrire dans ce groupe !</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="chat-input-bar">
+      <textarea id="msg-input" rows="1" placeholder="Écrire un message…"></textarea>
+      <button class="btn-send" id="btn-send" title="Envoyer">
+        <i class="bi bi-send-fill"></i>
+      </button>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const messagesArea = document.getElementById("messages-area");
+  const msgInput     = document.getElementById("msg-input");
+  const btnSend      = document.getElementById("btn-send");
+
+  // Current user identifier used to distinguish own messages from the WS echo
+  const ME = "{{ request.user.get_full_name|default:request.user.username|escapejs }}";
+
+  messagesArea.scrollTop = messagesArea.scrollHeight;
+
+  const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+  const ws = new WebSocket(`${wsScheme}://${window.location.host}/ws/chat/groupe/{{ group.id }}/`);
+
+  ws.onmessage = function (e) {
+    const data = JSON.parse(e.data);
+    // The consumer echoes to all members including sender — skip own echo
+    if (data.sender !== ME) {
+      appendBubble(data.message, data.sender, false);
+    }
+  };
+
+  ws.onclose = function () {
+    console.warn("WebSocket group chat fermé.");
+  };
+
+  function sendMessage() {
+    const content = msgInput.value.trim();
+    if (!content || ws.readyState !== WebSocket.OPEN) return;
+    ws.send(JSON.stringify({ message: content, sender: ME }));
+    appendBubble(content, null, true);   // render immediately for sender
+    msgInput.value = "";
+    msgInput.style.height = "auto";
+  }
+
+  function appendBubble(content, sender, isMine) {
+    const now  = new Date();
+    const time = now.getHours().toString().padStart(2, "0") + ":" +
+                 now.getMinutes().toString().padStart(2, "0");
+    let html;
+    if (isMine) {
+      html = `
+        <div class="bubble-wrapper mine">
+          <div>
+            <div class="bubble mine">${esc(content)}</div>
+            <div class="bubble-meta mine">${time}</div>
+          </div>
+        </div>`;
+    } else {
+      const initial = sender ? sender.slice(0, 1).toUpperCase() : "?";
+      html = `
+        <div class="bubble-wrapper">
+          <div class="bubble-avatar">${esc(initial)}</div>
+          <div>
+            <div class="bubble-sender">${esc(sender || "")}</div>
+            <div class="bubble theirs">${esc(content)}</div>
+            <div class="bubble-meta">${time}</div>
+          </div>
+        </div>`;
+    }
+    messagesArea.insertAdjacentHTML("beforeend", html);
+    messagesArea.scrollTop = messagesArea.scrollHeight;
+  }
+
+  function esc(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  btnSend.addEventListener("click", sendMessage);
+
+  msgInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  msgInput.addEventListener("input", function () {
+    this.style.height = "auto";
+    this.style.height = Math.min(this.scrollHeight, 120) + "px";
+  });
+</script>
+{% endblock %}
