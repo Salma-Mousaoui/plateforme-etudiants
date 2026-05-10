@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from .models import ChatGroup, Message
 
@@ -31,8 +31,8 @@ def get_conversations(user):
             ).count()
             conversations.append({
                 "other_user": other,
-                "last_message": msg.content,   # plain string
-                "last_time": msg.sent_at,       # datetime
+                "last_message": msg.content,
+                "last_time": msg.sent_at,
                 "unread_count": unread,
             })
     return conversations
@@ -48,6 +48,18 @@ def ChatListView(request):
 def PrivateChatView(request, other_user_id):
     user = request.user
     other_user = get_object_or_404(User, pk=other_user_id)
+
+    if request.method == "POST":
+        content = request.POST.get("content", "")
+        attachment = request.FILES.get("attachment", None)
+        if content or attachment:
+            Message.objects.create(
+                sender=user,
+                receiver=other_user,
+                content=content,
+                attachment=attachment,
+            )
+        return redirect("private-chat", other_user_id=other_user.id)
 
     Message.objects.filter(
         sender=other_user, receiver=user, is_read=False
@@ -70,7 +82,7 @@ def PrivateChatView(request, other_user_id):
 def GroupChatView(request, group_id):
     user = request.user
     group = get_object_or_404(ChatGroup, pk=group_id)
-    if user not in group.members.all():
+    if not group.members.filter(pk=user.pk).exists():
         group.members.add(user)
     messages = list(
         Message.objects.filter(group=group).order_by("sent_at")

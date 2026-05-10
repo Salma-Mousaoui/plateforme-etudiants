@@ -135,6 +135,7 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    overflow: hidden;
   }
   .header-avatar img {
     width: 42px;
@@ -213,14 +214,32 @@
   .receipt-read   { color: #2563EB; }
   .receipt-unread { color: #9ca3af; }
 
+  /* ── Attachment images ────────────────────────── */
+  .msg-attachment-img {
+    max-width: 200px;
+    border-radius: 8px;
+    display: block;
+    margin-top: 6px;
+    cursor: pointer;
+  }
+
   /* ── Send bar ─────────────────────────────────── */
   .send-bar {
     display: flex;
+    align-items: center;
     gap: 8px;
-    padding: 16px;
+    padding: 12px 16px;
     border-top: 1px solid #e5e7eb;
     background: #fff;
     flex-shrink: 0;
+  }
+  #file-preview-bar {
+    padding: 4px 16px;
+    font-size: 12px;
+    color: #6b7280;
+    background: #fff;
+    flex-shrink: 0;
+    border-top: 1px solid #f3f4f6;
   }
 
   /* ── WS status banner ─────────────────────────── */
@@ -295,6 +314,7 @@
   <!-- RIGHT -->
   <div class="chat-main">
 
+    <!-- Header -->
     <div class="chat-header">
       <div class="header-avatar">
         {% if other_user.photo %}
@@ -315,10 +335,12 @@
           {% endif %}
         </span>
       </div>
-      <a href="/professionnel/{{ other_user.id }}/"
-         class="btn btn-outline-secondary btn-sm ms-auto">
-        View profile
-      </a>
+      {% if other_user.role != 'student' %}
+        <a href="/professionnel/{{ other_user.id }}/"
+           class="btn btn-outline-secondary btn-sm ms-auto">
+          View profile
+        </a>
+      {% endif %}
     </div>
 
     <div id="ws-status">Connection lost — reconnecting…</div>
@@ -330,7 +352,26 @@
           <div class="msg-row msg-row-right">
             <div class="bubble-wrap bubble-wrap-right">
               <div class="bubble bubble-right">
-                {{ msg.content }}
+                {% if msg.content %}{{ msg.content }}{% endif %}
+                {% if msg.attachment %}
+                  {% with n=msg.attachment.name|lower %}
+                    {% if ".jpg" in n or ".jpeg" in n or ".png" in n or ".gif" in n or ".webp" in n %}
+                      <a href="{{ msg.attachment.url }}" target="_blank">
+                        <img src="{{ msg.attachment.url }}" class="msg-attachment-img" alt="image">
+                      </a>
+                    {% elif ".pdf" in n %}
+                      <a href="{{ msg.attachment.url }}" target="_blank"
+                         class="btn btn-sm btn-light mt-1">
+                        📄 View PDF
+                      </a>
+                    {% else %}
+                      <a href="{{ msg.attachment.url }}" download
+                         class="btn btn-sm btn-light mt-1">
+                        📎 Download file
+                      </a>
+                    {% endif %}
+                  {% endwith %}
+                {% endif %}
                 <div class="bubble-time bubble-time-right">{{ msg.sent_at|time:"H:i" }}</div>
               </div>
               <div class="receipt">
@@ -346,7 +387,26 @@
           <div class="msg-row msg-row-left">
             <div class="bubble-wrap bubble-wrap-left">
               <div class="bubble bubble-left">
-                {{ msg.content }}
+                {% if msg.content %}{{ msg.content }}{% endif %}
+                {% if msg.attachment %}
+                  {% with n=msg.attachment.name|lower %}
+                    {% if ".jpg" in n or ".jpeg" in n or ".png" in n or ".gif" in n or ".webp" in n %}
+                      <a href="{{ msg.attachment.url }}" target="_blank">
+                        <img src="{{ msg.attachment.url }}" class="msg-attachment-img" alt="image">
+                      </a>
+                    {% elif ".pdf" in n %}
+                      <a href="{{ msg.attachment.url }}" target="_blank"
+                         class="btn btn-sm btn-outline-secondary mt-1">
+                        📄 View PDF
+                      </a>
+                    {% else %}
+                      <a href="{{ msg.attachment.url }}" download
+                         class="btn btn-sm btn-outline-secondary mt-1">
+                        📎 Download file
+                      </a>
+                    {% endif %}
+                  {% endwith %}
+                {% endif %}
                 <div class="bubble-time bubble-time-left">{{ msg.sent_at|time:"H:i" }}</div>
               </div>
             </div>
@@ -357,14 +417,31 @@
       {% endfor %}
     </div>
 
+    <!-- File preview bar (shown when a file is selected) -->
+    <div id="file-preview-bar" style="display:none;"></div>
+
     <!-- Send bar -->
-    <div class="send-bar">
-      <input type="text" id="message-input" class="form-control"
-             placeholder="Write a message..." autocomplete="off">
-      <button id="send-btn" class="btn btn-primary">
-        <i class="bi bi-send-fill"></i>
-      </button>
-    </div>
+    <form id="file-form" method="POST"
+          action="{% url 'private-chat' other_user.id %}"
+          enctype="multipart/form-data">
+      {% csrf_token %}
+      <!-- Hidden content field: populated by JS when submitting with a file -->
+      <input type="hidden" name="content" id="file-content-hidden">
+      <input type="file" id="file-input" name="attachment" class="d-none"
+             accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.txt">
+      <div class="send-bar">
+        <button type="button" id="attach-btn"
+                class="btn btn-outline-secondary btn-sm"
+                title="Attach a file">
+          <i class="bi bi-paperclip"></i>
+        </button>
+        <input type="text" id="message-input" class="form-control"
+               placeholder="Write a message…" autocomplete="off">
+        <button type="button" id="send-btn" class="btn btn-primary">
+          <i class="bi bi-send-fill"></i>
+        </button>
+      </div>
+    </form>
 
   </div>
 </div>
@@ -378,6 +455,9 @@
   const wsUrl    = `${wsScheme}://${window.location.host}/ws/chat/prive/${OTHER_ID}/`;
 
   let chatSocket;
+  let fileSelected = false;
+
+  // ── WebSocket ──────────────────────────────────────────────────────────────
 
   function connect() {
     chatSocket = new WebSocket(wsUrl);
@@ -388,10 +468,10 @@
 
     chatSocket.onmessage = function (e) {
       const data = JSON.parse(e.data);
-      if (data.sender_id !== ME) {
-        appendMessage(data.message, data.sender_id, data.sent_at, data.is_read ?? false);
-        scrollToBottom();
-      }
+      // Skip history_item — Django already rendered those on page load
+      if (data.type === "history_item") return;
+      appendMessage(data.message, data.sender_id, data.sent_at, data.is_read ?? false, null);
+      scrollToBottom();
     };
 
     chatSocket.onerror = function (err) {
@@ -406,11 +486,65 @@
 
   connect();
 
-  function appendMessage(message, senderId, sentAt, isRead) {
+  // ── File attachment ────────────────────────────────────────────────────────
+
+  document.getElementById("attach-btn").onclick = function () {
+    document.getElementById("file-input").click();
+  };
+
+  document.getElementById("file-input").onchange = function () {
+    const file = this.files[0];
+    const bar  = document.getElementById("file-preview-bar");
+    if (file) {
+      fileSelected = true;
+      bar.textContent = "📎 " + file.name;
+      bar.style.display = "block";
+    } else {
+      fileSelected = false;
+      bar.textContent = "";
+      bar.style.display = "none";
+    }
+  };
+
+  // ── Send logic ─────────────────────────────────────────────────────────────
+
+  document.getElementById("send-btn").onclick = sendMessage;
+
+  document.getElementById("message-input").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  function sendMessage() {
+    if (fileSelected) {
+      // Submit form via POST (handles file + optional text)
+      document.getElementById("file-content-hidden").value =
+        document.getElementById("message-input").value.trim();
+      document.getElementById("file-form").submit();
+      return;
+    }
+
+    const input = document.getElementById("message-input");
+    const msg   = input.value.trim();
+    if (!msg) return;
+
+    if (chatSocket.readyState !== WebSocket.OPEN) {
+      alert("Connection lost, please wait…");
+      return;
+    }
+
+    chatSocket.send(JSON.stringify({ message: msg, sender_id: ME }));
+    appendMessage(msg, ME, now(), false, null);
+    scrollToBottom();
+    input.value = "";
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  function appendMessage(content, senderId, time, isRead, attachmentHtml) {
     const isMe = senderId === ME;
-    const time = sentAt
-      ? new Date(sentAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      : "";
 
     const receipt = isMe
       ? `<div class="receipt">
@@ -418,11 +552,15 @@
          </div>`
       : "";
 
+    const attachHtml = attachmentHtml
+      ? `<div class="mt-1">${attachmentHtml}</div>`
+      : "";
+
     const html = `
       <div class="msg-row ${isMe ? "msg-row-right" : "msg-row-left"}">
         <div class="bubble-wrap ${isMe ? "bubble-wrap-right" : "bubble-wrap-left"}">
           <div class="bubble ${isMe ? "bubble-right" : "bubble-left"}">
-            ${esc(message)}
+            ${content ? esc(content) : ""}${attachHtml}
             <div class="bubble-time ${isMe ? "bubble-time-right" : "bubble-time-left"}">${time}</div>
           </div>
           ${receipt}
@@ -439,27 +577,15 @@
 
   function esc(str) {
     return String(str)
-      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
   }
 
-  document.getElementById("send-btn").onclick = function () {
-    const input = document.getElementById("message-input");
-    const msg   = input.value.trim();
-    if (!msg) return;
-    if (chatSocket.readyState !== WebSocket.OPEN) {
-      alert("Connection lost, please wait…");
-      return;
-    }
-    chatSocket.send(JSON.stringify({ message: msg, sender_id: ME }));
-    appendMessage(msg, ME, new Date().toISOString(), false);
-    scrollToBottom();
-    input.value = "";
-  };
-
-  document.getElementById("message-input").addEventListener("keypress", function (e) {
-    if (e.key === "Enter") document.getElementById("send-btn").click();
-  });
+  function now() {
+    return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+  }
 
   scrollToBottom();
 </script>
