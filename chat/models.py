@@ -50,8 +50,10 @@ class Message(models.Model):
         null=True,
         blank=True,
     )
-    content = models.TextField()
-    sent_at = models.DateTimeField(auto_now_add=True)
+    content    = models.TextField()
+    is_read    = models.BooleanField(default=False)
+    attachment = models.FileField(upload_to="chat_attachments/", blank=True, null=True)
+    sent_at    = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         if self.group:

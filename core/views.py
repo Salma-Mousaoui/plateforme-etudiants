@@ -16,6 +16,8 @@ from django.shortcuts import render, redirect
 from django.views import View
 from django.views.generic import TemplateView
 
+from housing.models import HousingListing
+
 from .forms import LoginForm, ProfessionalProfileForm, RegisterForm
 from .models import ProfessionalProfile
 
@@ -30,9 +32,9 @@ def _role_dashboard_url(role):
     """Return the redirect URL name for a given user role."""
     if role == "admin":
         return "dashboard"
-    if role in ("lawyer", "orientation"):
-        return "professionals"
-    return "housing"  # student and housing landlord
+    if role in ("lawyer", "orientation", "housing"):
+        return "espace-pro"
+    return "listings"  # student
 
 
 class LandingView(TemplateView):
@@ -168,6 +170,42 @@ class CustomLogoutView(View):
 # ==============================================================================
 # profil_view
 # ==============================================================================
+
+_ROLE_LABELS = {
+    "housing":     "Landlord / Agency",
+    "lawyer":      "Lawyer",
+    "orientation": "Academic Advisor",
+    "admin":       "Administrator",
+}
+
+
+@login_required
+def espace_pro_view(request):
+    """Professional space — role-specific dashboard for pros."""
+    user = request.user
+    if user.role == "student":
+        return redirect("listings")
+
+    context = {"role_label": _ROLE_LABELS.get(user.role, user.role)}
+
+    if user.role == "housing":
+        context["listings"] = HousingListing.objects.filter(owner=user).order_by("-created_at")
+
+    elif user.role in ("lawyer", "orientation"):
+        pro_profile, _ = ProfessionalProfile.objects.get_or_create(user=user)
+        if request.method == "POST":
+            form = ProfessionalProfileForm(request.POST, instance=pro_profile)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Profile updated successfully.")
+                return redirect("espace-pro")
+        else:
+            form = ProfessionalProfileForm(instance=pro_profile)
+        context["pro_profile"] = pro_profile
+        context["pro_form"] = form
+
+    return render(request, "core/espace_pro.html", context)
+
 
 @login_required
 def profil_view(request):

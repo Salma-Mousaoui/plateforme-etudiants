@@ -4,5 +4,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("", views.index, name="chat"),
+    path("", views.index, name="chat-list"),
+    path("prive/<int:other_user_id>/", views.private_chat_view, name="chat-private"),
 ]

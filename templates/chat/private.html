@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Chat with {{ other_user.get_full_name }} — Elan{% endblock %}
+
+{% block content %}
+<div class="chat-layout">
+
+  <!-- ── Sidebar: conversation list ─────────────────────────────── -->
+  <aside class="chat-sidebar">
+    <div class="chat-sidebar-header">
+      <i class="bi bi-chat-dots me-2"></i>My Conversations
+    </div>
+
+    {% if conversations %}
+      {% for conv in conversations %}
+        <a href="{% url 'chat-private' conv.other_user.pk %}"
+           class="chat-conv-item text-decoration-none{% if conv.other_user.pk == other_user.pk %} active{% endif %}">
+          <div class="chat-conv-avatar">
+            {{ conv.other_user.first_name|first|upper }}{{ conv.other_user.last_name|first|upper }}
+          </div>
+          <div class="chat-conv-info">
+            <div class="chat-conv-name">{{ conv.other_user.get_full_name }}</div>
+            {% if conv.last_message %}
+              <div class="chat-conv-last">
+                {% if conv.last_message.sender == request.user %}You: {% endif %}
+                {{ conv.last_message.content|truncatechars:40 }}
+              </div>
+            {% endif %}
+          </div>
+          {% if conv.unread_count %}
+            <span class="chat-unread-badge">{{ conv.unread_count }}</span>
+          {% endif %}
+        </a>
+      {% endfor %}
+    {% else %}
+      <div class="p-4 text-center">
+        <i class="bi bi-chat-square-text" style="font-size:2rem;color:#CBD5E1"></i>
+        <p class="text-muted small mt-2 mb-0">No other conversations yet.</p>
+      </div>
+    {% endif %}
+  </aside>
+
+  <!-- ── Main: active chat ──────────────────────────────────────── -->
+  <div class="chat-main">
+
+    <!-- Header -->
+    <div class="chat-header">
+      <div class="d-flex align-items-center gap-3">
+        <div class="chat-conv-avatar" style="width:38px;height:38px;font-size:.85rem">
+          {{ other_user.first_name|first|upper }}{{ other_user.last_name|first|upper }}
+        </div>
+        <div>
+          <div class="fw-bold" style="font-family:var(--font-display);color:var(--elan-navy);line-height:1.2">
+            {{ other_user.get_full_name }}
+          </div>
+          {% if other_user.is_pro %}
+            <div class="text-muted" style="font-size:.75rem">{{ other_user.get_role_display }}</div>
+          {% endif %}
+        </div>
+      </div>
+      {% if other_user.is_pro %}
+        <a href="{% url 'pro-detail' other_user.pk %}"
+           class="btn btn-sm btn-outline-secondary" style="border-radius:8px;font-size:.8rem">
+          <i class="bi bi-person me-1"></i>View profile
+        </a>
+      {% endif %}
+    </div>
+
+    <!-- Messages area -->
+    <div class="chat-messages" id="chatMessages">
+      {% for msg in messages %}
+        <div class="msg {% if msg.sender == request.user %}msg-sent{% else %}msg-received{% endif %}">
+          {% if msg.sender != request.user %}
+            <div class="msg-sender-name">{{ msg.sender.first_name }}</div>
+          {% endif %}
+          <div class="msg-bubble">{{ msg.content }}</div>
+          <div class="msg-time">{{ msg.sent_at|date:"N j" }} · {{ msg.sent_at|time:"H:i" }}</div>
+        </div>
+      {% empty %}
+        <div class="text-center mt-4">
+          <i class="bi bi-chat" style="font-size:2.5rem;color:#CBD5E1"></i>
+          <p class="text-muted small mt-2">No messages yet. Say hello!</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Input bar -->
+    <div class="chat-input-bar">
+      <input id="messageInput"
+             type="text"
+             placeholder="Write a message..."
+             autocomplete="off">
+      <button id="sendBtn" type="button">
+        <i class="bi bi-send-fill me-1"></i>Send
+      </button>
+    </div>
+
+  </div><!-- .chat-main -->
+</div><!-- .chat-layout -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const ROOM_NAME    = "{{ room_name }}";
+  const CURRENT_ID   = {{ request.user.pk }};
+  const CURRENT_NAME = "{{ request.user.get_full_name|escapejs }}";
+  const OTHER_ID     = {{ other_user.pk }};
+
+  const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+  const socket   = new WebSocket(`${protocol}://${window.location.host}/ws/chat/prive/${ROOM_NAME}/`);
+
+  socket.onopen = function () {
+    console.log("[Chat] WebSocket connected to room:", ROOM_NAME);
+  };
+
+  socket.onclose = function (e) {
+    console.warn("[Chat] WebSocket closed:", e.code, e.reason);
+  };
+
+  socket.onerror = function (e) {
+    console.error("[Chat] WebSocket error:", e);
+  };
+
+  socket.onmessage = function (event) {
+    const data = JSON.parse(event.data);
+    // Don't duplicate: the sender already appended their own bubble on send
+    if (String(data.sender_id) !== String(CURRENT_ID)) {
+      appendBubble(data.message, data.sender, false);
+    }
+  };
+
+  function appendBubble(content, senderName, isSent) {
+    const wrap = document.getElementById("chatMessages");
+
+    // Remove empty-state placeholder if present
+    const empty = wrap.querySelector(".text-center.mt-4");
+    if (empty) empty.remove();
+
+    const div = document.createElement("div");
+    div.className = "msg " + (isSent ? "msg-sent" : "msg-received");
+
+    if (!isSent) {
+      const nameEl = document.createElement("div");
+      nameEl.className = "msg-sender-name";
+      nameEl.textContent = senderName.split(" ")[0];
+      div.appendChild(nameEl);
+    }
+
+    const bubble = document.createElement("div");
+    bubble.className = "msg-bubble";
+    bubble.textContent = content;
+    div.appendChild(bubble);
+
+    wrap.appendChild(div);
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  function sendMessage() {
+    const input = document.getElementById("messageInput");
+    const text  = input.value.trim();
+    if (!text || socket.readyState !== WebSocket.OPEN) return;
+
+    socket.send(JSON.stringify({
+      message:     text,
+      sender:      CURRENT_NAME,
+      sender_id:   CURRENT_ID,
+      receiver_id: OTHER_ID,
+    }));
+
+    appendBubble(text, CURRENT_NAME, true);
+    input.value = "";
+    input.focus();
+  }
+
+  document.getElementById("sendBtn").addEventListener("click", sendMessage);
+  document.getElementById("messageInput").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  // Scroll to bottom on load
+  (function scrollBottom() {
+    const wrap = document.getElementById("chatMessages");
+    wrap.scrollTop = wrap.scrollHeight;
+  })();
+})();
+</script>
+{% endblock %}

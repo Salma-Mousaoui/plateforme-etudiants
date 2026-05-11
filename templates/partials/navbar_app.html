@@ -1,98 +1,62 @@
 {% with active_url=request.resolver_match.url_name %}
 <nav class="navbar-elan">
-  <div class="elan-container">
+  <div class="elan-container d-flex align-items-center" style="height:100%">
 
-    <!-- Brand -->
-    {% if not request.user.is_authenticated %}
-      <a href="{% url 'landing' %}" class="brand text-decoration-none">
-        <i class="bi bi-mortarboard-fill"></i> Élan
-      </a>
-    {% elif request.user.role == "admin" %}
-      <a href="{% url 'dashboard' %}" class="brand text-decoration-none">
-        <i class="bi bi-mortarboard-fill"></i> Élan
-      </a>
-    {% elif request.user.role == "lawyer" or request.user.role == "orientation" %}
-      <a href="{% url 'professionals' %}" class="brand text-decoration-none">
-        <i class="bi bi-mortarboard-fill"></i> Élan
-      </a>
-    {% else %}
-      <a href="{% url 'listings' %}" class="brand text-decoration-none">
-        <i class="bi bi-mortarboard-fill"></i> Élan
-      </a>
-    {% endif %}
+    <a href="{% url 'landing' %}" class="brand text-decoration-none">
+      <i class="bi bi-mortarboard-fill"></i> Elan
+    </a>
 
-    <!-- Desktop nav links -->
     <div class="nav-links d-none d-md-flex ms-4">
-
-      {% if request.user.role == "admin" %}
-        <a href="{% url 'dashboard' %}"
-           class="nav-link-item text-decoration-none{% if active_url == 'dashboard' %} active{% endif %}">
-          <i class="bi bi-shield-check me-1"></i>Dashboard
-        </a>
-        <a href="{% url 'chat' %}"
-           class="nav-link-item text-decoration-none{% if active_url == 'chat' %} active{% endif %}">
-          <i class="bi bi-chat-dots me-1"></i>Communauté
-        </a>
-
-      {% elif request.user.role == "student" %}
+      {% if request.user.is_authenticated %}
         <a href="{% url 'listings' %}"
            class="nav-link-item text-decoration-none{% if active_url == 'listings' or active_url == 'listing-detail' %} active{% endif %}">
-          <i class="bi bi-building me-1"></i>Logement
+          <i class="bi bi-building me-1"></i>Housing
         </a>
         <a href="{% url 'lawyers' %}"
            class="nav-link-item text-decoration-none{% if active_url == 'lawyers' %} active{% endif %}">
-          <i class="bi bi-briefcase me-1"></i>Avocats
+          <i class="bi bi-briefcase me-1"></i>Lawyers
         </a>
         <a href="{% url 'advisors' %}"
            class="nav-link-item text-decoration-none{% if active_url == 'advisors' %} active{% endif %}">
-          <i class="bi bi-journal-text me-1"></i>Conseillers
+          <i class="bi bi-journal-text me-1"></i>Counselors
         </a>
-        <a href="{% url 'chat' %}"
-           class="nav-link-item text-decoration-none{% if active_url == 'chat' %} active{% endif %}">
-          <span class="nav-notif-wrap">
-            <i class="bi bi-chat-dots me-1"></i>Communauté
-            {% if unread_count %}<span class="nav-notif-dot"></span>{% endif %}
-          </span>
+        <a href="{% url 'chat-list' %}"
+           class="nav-link-item text-decoration-none{% if active_url == 'chat-list' %} active{% endif %}">
+          <i class="bi bi-chat-dots me-1"></i>Community
         </a>
-
-      {% elif request.user.role == "housing" %}
-        <a href="{% url 'my-listings' %}"
-           class="nav-link-item text-decoration-none{% if active_url == 'my-listings' or active_url == 'create-listing' %} active{% endif %}">
-          <i class="bi bi-building me-1"></i>Mes annonces
+        {% if request.user.role != "student" %}
+          <a href="{% url 'espace-pro' %}"
+             class="nav-link-item text-decoration-none{% if active_url == 'espace-pro' %} active{% endif %}">
+            <i class="bi bi-person-badge me-1"></i>My Space
+          </a>
+        {% endif %}
+      {% else %}
+        <a href="#services" class="nav-link-item text-decoration-none">
+          <i class="bi bi-grid me-1"></i>Services
         </a>
-        <a href="{% url 'chat' %}"
-           class="nav-link-item text-decoration-none{% if active_url == 'chat' %} active{% endif %}">
-          <i class="bi bi-chat-dots me-1"></i>Communauté
+        <a href="#how-it-works" class="nav-link-item text-decoration-none">
+          <i class="bi bi-info-circle me-1"></i>How it Works
         </a>
-
-      {% elif request.user.role == "lawyer" or request.user.role == "orientation" %}
-        <a href="{% url 'professionals' %}"
-           class="nav-link-item text-decoration-none{% if active_url == 'professionals' %} active{% endif %}">
-          <i class="bi bi-person-badge me-1"></i>Mes services
-        </a>
-        <a href="{% url 'chat' %}"
-           class="nav-link-item text-decoration-none{% if active_url == 'chat' %} active{% endif %}">
-          <i class="bi bi-chat-dots me-1"></i>Communauté
+        <a href="#join" class="nav-link-item text-decoration-none">
+          <i class="bi bi-rocket-takeoff me-1"></i>Join Us
         </a>
       {% endif %}
-
     </div>
 
-    <!-- Auth actions -->
     <div class="nav-actions ms-auto">
       {% if request.user.is_authenticated %}
         <a href="{% url 'profil' %}" class="btn-nav-ghost text-decoration-none">
-          <i class="bi bi-person-circle me-1"></i>Mon profil
+          <i class="bi bi-person-circle me-1"></i>My Profile
         </a>
-        <a href="{% url 'logout' %}" class="btn-nav-solid text-decoration-none">
-          <i class="bi bi-box-arrow-right me-1"></i>Déconnexion
+        <a href="{% url 'logout' %}" class="btn-nav-ghost text-decoration-none">
+          <i class="bi bi-box-arrow-right me-1"></i>Logout
         </a>
       {% else %}
         <a href="{% url 'login' %}" class="btn-nav-ghost text-decoration-none">
-          <i class="bi bi-box-arrow-in-right me-1"></i>Connexion
+          <i class="bi bi-box-arrow-in-right me-1"></i>Login
         </a>
         <a href="{% url 'register' %}" class="btn-nav-solid text-decoration-none">
-          <i class="bi bi-person-plus me-1"></i>S'inscrire
+          <i class="bi bi-person-plus me-1"></i>Sign Up
         </a>
       {% endif %}
     </div>

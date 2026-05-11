@@ -120,7 +120,7 @@
       <!-- Action buttons -->
       <div class="d-flex gap-2 flex-wrap">
         {% if request.user.is_authenticated %}
-          <a href="/chat/private/{{ pro.id }}/"
+          <a href="{% url 'chat-private' pro.pk %}"
              class="btn"
              style="background:var(--elan-blue);color:#fff;border:none;border-radius:10px;font-weight:600">
             <i class="bi bi-chat-dots me-2"></i>Send a message

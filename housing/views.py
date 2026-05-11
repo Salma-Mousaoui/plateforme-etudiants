@@ -11,6 +11,38 @@ from .forms import HousingListingForm
 from .models import HousingListing
 
 
+@method_decorator(login_required, name="dispatch")
+class UpdateListingView(View):
+    template_name = "housing/edit_listing.html"
+
+    def _get_listing(self, request, pk):
+        return get_object_or_404(HousingListing, pk=pk, owner=request.user)
+
+    def get(self, request, pk):
+        listing = self._get_listing(request, pk)
+        return render(request, self.template_name, {"form": HousingListingForm(instance=listing), "listing": listing})
+
+    def post(self, request, pk):
+        listing = self._get_listing(request, pk)
+        form = HousingListingForm(request.POST, instance=listing)
+        if form.is_valid():
+            updated = form.save(commit=False)
+            updated.is_approved = False
+            updated.save()
+            messages.success(request, "Listing updated and resubmitted for approval.")
+            return redirect("espace-pro")
+        return render(request, self.template_name, {"form": form, "listing": listing})
+
+
+@method_decorator(login_required, name="dispatch")
+class DeleteListingView(View):
+    def post(self, request, pk):
+        listing = get_object_or_404(HousingListing, pk=pk, owner=request.user)
+        listing.delete()
+        messages.success(request, "Listing deleted successfully.")
+        return redirect("espace-pro")
+
+
 class ListingListView(ListView):
     template_name = "housing/listing_list.html"
     context_object_name = "listings"

@@ -1,10 +1,55 @@
 {% extends "base.html" %}
-
-{% block title %}Messagerie - Plateforme Étudiants{% endblock %}
+{% block title %}Community — Elan{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1>Messagerie</h1>
-    <p>Bienvenue sur la page chat.</p>
+<div class="chat-layout">
+
+  <!-- ── Sidebar: conversation list ─────────────────────────────── -->
+  <aside class="chat-sidebar">
+    <div class="chat-sidebar-header">
+      <i class="bi bi-chat-dots me-2"></i>My Conversations
+    </div>
+
+    {% if conversations %}
+      {% for conv in conversations %}
+        <a href="{% url 'chat-private' conv.other_user.pk %}"
+           class="chat-conv-item text-decoration-none">
+          <div class="chat-conv-avatar">
+            {{ conv.other_user.first_name|first|upper }}{{ conv.other_user.last_name|first|upper }}
+          </div>
+          <div class="chat-conv-info">
+            <div class="chat-conv-name">{{ conv.other_user.get_full_name }}</div>
+            {% if conv.last_message %}
+              <div class="chat-conv-last">
+                {% if conv.last_message.sender == request.user %}You: {% endif %}
+                {{ conv.last_message.content|truncatechars:40 }}
+              </div>
+            {% endif %}
+          </div>
+          {% if conv.unread_count %}
+            <span class="chat-unread-badge">{{ conv.unread_count }}</span>
+          {% endif %}
+        </a>
+      {% endfor %}
+    {% else %}
+      <div class="p-4 text-center">
+        <i class="bi bi-chat-square-text" style="font-size:2rem;color:#CBD5E1"></i>
+        <p class="text-muted small mt-2 mb-0">
+          No conversations yet.<br>
+          Click <strong>Send a message</strong> on a professional's profile to start.
+        </p>
+      </div>
+    {% endif %}
+  </aside>
+
+  <!-- ── Main: empty state ──────────────────────────────────────── -->
+  <main class="chat-main d-flex align-items-center justify-content-center">
+    <div class="text-center">
+      <i class="bi bi-chat-dots" style="font-size:3.5rem;color:#CBD5E1"></i>
+      <p class="mt-3 fw-semibold mb-1" style="color:var(--elan-navy)">Select a conversation</p>
+      <p class="text-muted small">Choose a contact from the left to start chatting.</p>
+    </div>
+  </main>
+
 </div>
 {% endblock %}

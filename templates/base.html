@@ -21,87 +21,43 @@
 
 <body>
 
-<!-- NAVBAR — Elan Design System exact spec -->
-<!-- class: navbar-elan | height: 54px | bg: #1E3A5F | font: Sora 700 -->
+<!-- NAVBAR — unified across all pages -->
 <nav class="navbar-elan">
   <div class="elan-container d-flex align-items-center" style="height:100%">
 
-    {% if request.user.is_authenticated %}
-      {% if request.user.role == "admin" %}
-        <a href="{% url 'dashboard' %}" class="brand text-decoration-none">
-          <i class="bi bi-mortarboard-fill"></i> Elan
-        </a>
-      {% elif request.user.role == "lawyer" or request.user.role == "orientation" %}
-        <a href="{% url 'professionals' %}" class="brand text-decoration-none">
-          <i class="bi bi-mortarboard-fill"></i> Elan
-        </a>
-      {% else %}
-        <a href="{% url 'housing' %}" class="brand text-decoration-none">
-          <i class="bi bi-mortarboard-fill"></i> Elan
-        </a>
-      {% endif %}
-    {% else %}
-      <a href="{% url 'landing' %}" class="brand text-decoration-none">
-        <i class="bi bi-mortarboard-fill"></i> Elan
-      </a>
-    {% endif %}
+    <a href="{% url 'landing' %}" class="brand text-decoration-none">
+      <i class="bi bi-mortarboard-fill"></i> Elan
+    </a>
 
     <div class="nav-links d-none d-md-flex ms-4">
-
-      {% if not request.user.is_authenticated %}
-        <!-- Public visitor: anchor links scrolling to landing page sections -->
-        <a href="#services"     class="nav-link-item text-decoration-none">
-          <i class="bi bi-grid me-1"></i>Services
-        </a>
-        <a href="#how-it-works" class="nav-link-item text-decoration-none">
-          <i class="bi bi-info-circle me-1"></i>How it Works
-        </a>
-        <a href="#join"         class="nav-link-item text-decoration-none">
-          <i class="bi bi-rocket-takeoff me-1"></i>Join Us
-        </a>
-
-      {% elif request.user.role == "admin" %}
-        <!-- Admin navbar -->
-        <a href="{% url 'dashboard' %}" class="nav-link-item text-decoration-none text-warning fw-bold">
-          <i class="bi bi-shield-check me-1"></i>Dashboard
-        </a>
-        <a href="{% url 'chat' %}" class="nav-link-item text-decoration-none">
-          <i class="bi bi-chat-dots me-1"></i>Community
-        </a>
-
-      {% elif request.user.role == "student" %}
-        <!-- Student navbar -->
-        <a href="{% url 'housing' %}"      class="nav-link-item text-decoration-none">
+      {% if request.user.is_authenticated %}
+        <a href="{% url 'listings' %}" class="nav-link-item text-decoration-none">
           <i class="bi bi-building me-1"></i>Housing
         </a>
-        <a href="{% url 'professionals' %}" class="nav-link-item text-decoration-none">
+        <a href="{% url 'lawyers' %}" class="nav-link-item text-decoration-none">
           <i class="bi bi-briefcase me-1"></i>Lawyers
         </a>
         <a href="{% url 'advisors' %}" class="nav-link-item text-decoration-none">
           <i class="bi bi-journal-text me-1"></i>Counselors
         </a>
-        <a href="{% url 'chat' %}"          class="nav-link-item text-decoration-none">
+        <a href="{% url 'chat-list' %}" class="nav-link-item text-decoration-none">
           <i class="bi bi-chat-dots me-1"></i>Community
         </a>
-
-      {% elif request.user.role == "housing" %}
-        <!-- Landlord / Agency navbar -->
-        <a href="{% url 'housing' %}" class="nav-link-item text-decoration-none">
-          <i class="bi bi-building me-1"></i>My Listings
+        {% if request.user.role != "student" %}
+          <a href="{% url 'espace-pro' %}" class="nav-link-item text-decoration-none">
+            <i class="bi bi-person-badge me-1"></i>My Space
+          </a>
+        {% endif %}
+      {% else %}
+        <a href="#services" class="nav-link-item text-decoration-none">
+          <i class="bi bi-grid me-1"></i>Services
         </a>
-        <a href="{% url 'chat' %}" class="nav-link-item text-decoration-none">
-          <i class="bi bi-chat-dots me-1"></i>Community
+        <a href="#how-it-works" class="nav-link-item text-decoration-none">
+          <i class="bi bi-info-circle me-1"></i>How it Works
         </a>
-
-      {% elif request.user.role == "lawyer" or request.user.role == "orientation" %}
-        <!-- Lawyer / Academic Advisor navbar -->
-        <a href="{% url 'professionals' %}" class="nav-link-item text-decoration-none">
-          <i class="bi bi-person-badge me-1"></i>My Services
+        <a href="#join" class="nav-link-item text-decoration-none">
+          <i class="bi bi-rocket-takeoff me-1"></i>Join Us
         </a>
-        <a href="{% url 'chat' %}" class="nav-link-item text-decoration-none">
-          <i class="bi bi-chat-dots me-1"></i>Community
-        </a>
-
       {% endif %}
     </div>
 
@@ -151,7 +107,9 @@
   </div>
 {% endif %}
 
+<main>
 {% block content %}{% endblock content %}
+</main>
 
 {% include "partials/footer_app.html" %}
 
