@@ -32,14 +32,15 @@ def _role_dashboard_url(role):
         return "dashboard"
     if role in ("lawyer", "orientation", "housing"):
         return "espace-pro"
-    return "housing"  # student
+    return "landing"  # student — show the landing page
 
 
 class LandingView(TemplateView):
     template_name = "core/landing.html"
 
     def get(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
+        # Redirect admin/pro to their dashboards; students see the landing page
+        if request.user.is_authenticated and request.user.role != "student":
             return redirect(_role_dashboard_url(request.user.role))
         return super().get(request, *args, **kwargs)
 
