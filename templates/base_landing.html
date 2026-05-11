@@ -21,35 +21,88 @@
 
 <body>
 
-<!-- NAVBAR — Elan Design System exact spec -->
-<nav class="navbar-elan">
-  <div class="elan-container d-flex align-items-center" style="height:100%">
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg" style="background-color:#1E3A5F;">
+  <div class="container">
 
-    <a href="{% url 'landing' %}" class="brand text-decoration-none">
-      <i class="bi bi-mortarboard-fill"></i> Élan
+    <a class="navbar-brand text-white fw-bold text-decoration-none" href="{% url 'landing' %}">
+      <i class="bi bi-mortarboard-fill"></i> Elan
     </a>
 
-    <div class="nav-links d-none d-md-flex ms-4">
-      <a href="#services"     class="nav-link-item text-decoration-none">
-        <i class="bi bi-grid me-1"></i>Services
-      </a>
-      <a href="#how-it-works" class="nav-link-item text-decoration-none">
-        <i class="bi bi-info-circle me-1"></i>How it Works
-      </a>
-      <a href="#join"         class="nav-link-item text-decoration-none">
-        <i class="bi bi-rocket-takeoff me-1"></i>Join Us
-      </a>
-    </div>
+    <button class="navbar-toggler border-light" type="button"
+            data-bs-toggle="collapse" data-bs-target="#navbarLanding"
+            aria-controls="navbarLanding" aria-expanded="false"
+            aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-    <div class="nav-actions ms-auto">
-      <a href="{% url 'login' %}" class="btn-nav-ghost text-decoration-none">
-        <i class="bi bi-box-arrow-in-right me-1"></i>Login
-      </a>
-      <a href="{% url 'register' %}" class="btn-nav-solid text-decoration-none">
-        <i class="bi bi-person-plus me-1"></i>Sign Up
-      </a>
-    </div>
+    <div class="collapse navbar-collapse" id="navbarLanding">
 
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link text-white" href="#services">
+            <i class="bi bi-grid me-1"></i>Services
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white" href="#how-it-works">
+            <i class="bi bi-info-circle me-1"></i>How it Works
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white" href="{% url 'register' %}">
+            <i class="bi bi-rocket-takeoff me-1"></i>Join Us
+          </a>
+        </li>
+      </ul>
+
+      <ul class="navbar-nav ms-auto align-items-lg-center">
+        {% if request.user.is_authenticated %}
+
+          {% if request.user.role == 'admin' %}
+          <li class="nav-item">
+            <a class="nav-link text-warning fw-bold" href="{% url 'dashboard' %}">
+              <i class="bi bi-shield-check me-1"></i>Admin
+            </a>
+          </li>
+          {% endif %}
+
+          {% if request.user.role != 'student' %}
+          <li class="nav-item">
+            <a class="nav-link text-white" href="{% url 'espace-pro' %}">
+              <i class="bi bi-grid me-1"></i>My Space
+            </a>
+          </li>
+          {% endif %}
+
+          <li class="nav-item">
+            <a class="nav-link text-white" href="{% url 'profil' %}">
+              <i class="bi bi-person-circle me-1"></i>My Profile
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-white" href="{% url 'logout' %}">
+              <i class="bi bi-box-arrow-right me-1"></i>Logout
+            </a>
+          </li>
+
+        {% else %}
+
+          <li class="nav-item">
+            <a class="nav-link text-white" href="{% url 'login' %}">
+              <i class="bi bi-box-arrow-in-right me-1"></i>Login
+            </a>
+          </li>
+          <li class="nav-item ms-lg-2">
+            <a class="btn btn-light btn-sm fw-semibold" href="{% url 'register' %}">
+              <i class="bi bi-person-plus me-1"></i>Sign Up
+            </a>
+          </li>
+
+        {% endif %}
+      </ul>
+
+    </div>
   </div>
 </nav>
 

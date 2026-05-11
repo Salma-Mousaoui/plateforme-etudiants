@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -49,6 +50,10 @@ def PrivateChatView(request, other_user_id):
     user = request.user
     other_user = get_object_or_404(User, pk=other_user_id)
 
+    if other_user == user:
+        messages.error(request, "You cannot chat with yourself.")
+        return redirect("chat-list")
+
     if request.method == "POST":
         content = request.POST.get("content", "")
         attachment = request.FILES.get("attachment", None)
@@ -84,10 +89,10 @@ def GroupChatView(request, group_id):
     group = get_object_or_404(ChatGroup, pk=group_id)
     if not group.members.filter(pk=user.pk).exists():
         group.members.add(user)
-    messages = list(
+    messages_list = list(
         Message.objects.filter(group=group).order_by("sent_at")
     )[-50:]
     return render(request, "chat/chat_groupe.html", {
         "group": group,
-        "messages": messages,
+        "messages": messages_list,
     })

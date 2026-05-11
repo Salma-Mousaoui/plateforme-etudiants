@@ -107,11 +107,13 @@
 
           <!-- Contact button -->
           {% if request.user.is_authenticated %}
-            <a href="/chat/private/{{ object.owner.id }}/"
+            {% if request.user != object.owner %}
+            <a href="{% url 'private-chat' object.owner.id %}"
                class="btn w-100 mb-2"
                style="background:var(--elan-blue);color:#fff;border:none;border-radius:10px;font-weight:600">
-              <i class="bi bi-chat-dots me-2"></i>Contact
+              <i class="bi bi-chat-dots me-2"></i>Contact Owner
             </a>
+            {% endif %}
           {% else %}
             <a href="{% url 'login' %}"
                class="btn w-100 mb-2"
