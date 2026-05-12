@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mon espace professionnel — Elan{% endblock %}
+
+{% block content %}
+<div class="elan-container mt-4 mb-5">
+
+  <!-- ══════════════════════════════════════════════════════════
+       PAGE HEADER
+       ══════════════════════════════════════════════════════════ -->
+  <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-4">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <h1 class="fw-bold mb-0" style="font-family:var(--font-display);color:var(--elan-navy)">
+          Mon espace professionnel
+        </h1>
+        {% if request.user.role == "lawyer" %}
+          <span class="badge bg-primary px-3 py-2">Avocat</span>
+        {% else %}
+          <span class="badge bg-success px-3 py-2">Orienteur académique</span>
+        {% endif %}
+      </div>
+      <p class="text-muted mb-0">
+        <i class="bi bi-hand-wave me-1"></i>Bonjour, {{ request.user.get_full_name }}
+      </p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="/professionnel/{{ request.user.id }}/"
+         class="btn btn-outline-primary btn-sm fw-semibold" style="border-radius:8px">
+        <i class="bi bi-eye me-1"></i>Mon profil public
+      </a>
+      <a href="{% url 'profil' %}" class="btn btn-outline-secondary btn-sm" style="border-radius:8px">
+        <i class="bi bi-person-gear me-1"></i>Mon compte
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- ══════════════════════════════════════════════════════
+         LEFT COLUMN
+         ══════════════════════════════════════════════════════ -->
+    <div class="col-lg-6">
+
+      <!-- Profile completion -->
+      <div class="card border-0 shadow-sm mb-4" style="border-radius:16px">
+        <div class="card-body p-4">
+          <h5 class="fw-bold mb-3" style="font-family:var(--font-display);color:var(--elan-navy)">
+            <i class="bi bi-bar-chart-line me-2" style="color:var(--elan-blue)"></i>Complétion du profil
+          </h5>
+
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <div class="flex-grow-1">
+              <div class="progress" style="height:10px;border-radius:10px">
+                <div class="progress-bar" role="progressbar"
+                     style="width:{{ profile_completion_percentage }}%;background:var(--elan-blue);border-radius:10px"
+                     aria-valuenow="{{ profile_completion_percentage }}"
+                     aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+            </div>
+            <span class="fw-bold" style="color:var(--elan-blue);min-width:3rem;text-align:right">
+              {{ profile_completion_percentage }}%
+            </span>
+          </div>
+
+          {% if profile_completion_percentage < 100 %}
+            <p class="text-muted small mb-3">
+              Complétez votre profil pour être mieux visible par les étudiants.
+            </p>
+          {% else %}
+            <p class="text-muted small mb-3">
+              <i class="bi bi-check-circle-fill text-success me-1"></i>Profil complet !
+            </p>
+          {% endif %}
+
+          <div class="mb-3">
+            {% if not request.user.photo %}<div class="text-muted small"><i class="bi bi-x-circle text-danger me-1"></i>Photo de profil</div>{% else %}<div class="text-muted small"><i class="bi bi-check-circle text-success me-1"></i>Photo de profil</div>{% endif %}
+            {% if not request.user.city %}<div class="text-muted small"><i class="bi bi-x-circle text-danger me-1"></i>Ville</div>{% else %}<div class="text-muted small"><i class="bi bi-check-circle text-success me-1"></i>Ville</div>{% endif %}
+            {% if not professional_profile.bio %}<div class="text-muted small"><i class="bi bi-x-circle text-danger me-1"></i>Bio</div>{% else %}<div class="text-muted small"><i class="bi bi-check-circle text-success me-1"></i>Bio</div>{% endif %}
+            {% if not professional_profile.speciality %}<div class="text-muted small"><i class="bi bi-x-circle text-danger me-1"></i>Spécialité</div>{% else %}<div class="text-muted small"><i class="bi bi-check-circle text-success me-1"></i>Spécialité</div>{% endif %}
+          </div>
+
+          <a href="{% url 'update-profile-pro' %}"
+             class="btn btn-primary w-100 fw-semibold py-2" style="border-radius:10px">
+            <i class="bi bi-pencil-square me-1"></i>Modifier mon profil
+          </a>
+        </div>
+      </div>
+
+      <!-- Profile preview -->
+      <div class="card border-0 shadow-sm" style="border-radius:16px">
+        <div class="card-body p-4 text-center">
+          <h5 class="fw-bold mb-4" style="font-family:var(--font-display);color:var(--elan-navy)">
+            <i class="bi bi-eye me-2" style="color:var(--elan-blue)"></i>Aperçu public
+          </h5>
+
+          {% if request.user.photo %}
+            <img src="{{ request.user.photo.url }}"
+                 class="rounded-circle mx-auto mb-3 object-fit-cover d-block"
+                 style="width:90px;height:90px;border:3px solid var(--elan-blue-light)"
+                 alt="{{ request.user.get_full_name }}">
+          {% else %}
+            <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center fw-bold"
+                 style="width:90px;height:90px;font-size:1.8rem;font-family:var(--font-display);
+                 {% if request.user.role == 'lawyer' %}background:#EFF6FF;color:#2563EB;
+                 {% else %}background:#F0FDF4;color:#16A34A;{% endif %}">
+              {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
+            </div>
+          {% endif %}
+
+          <h6 class="fw-bold mb-2" style="color:var(--elan-navy)">{{ request.user.get_full_name }}</h6>
+
+          {% if request.user.role == "lawyer" %}
+            <span class="badge bg-primary px-3 py-2 mb-3">
+              <i class="bi bi-briefcase me-1"></i>Avocat
+            </span>
+          {% else %}
+            <span class="badge bg-success px-3 py-2 mb-3">
+              <i class="bi bi-journal-text me-1"></i>Orienteur académique
+            </span>
+          {% endif %}
+
+          {% if professional_profile.bio %}
+            <p class="text-muted small mb-3" style="white-space:pre-line;line-height:1.6">
+              {{ professional_profile.bio|truncatewords:25 }}
+            </p>
+          {% else %}
+            <p class="text-muted small fst-italic mb-3">Aucune bio pour l'instant.</p>
+          {% endif %}
+
+          {% if professional_profile.speciality %}
+            <div class="mb-2">
+              <span class="badge rounded-pill px-3 py-2"
+                    style="background:var(--elan-blue-light);color:var(--elan-blue)">
+                <i class="bi bi-award me-1"></i>{{ professional_profile.speciality }}
+              </span>
+            </div>
+          {% endif %}
+
+          {% if request.user.city %}
+            <p class="text-muted small mb-2">
+              <i class="bi bi-geo-alt me-1"></i>{{ request.user.city }}
+            </p>
+          {% endif %}
+
+          <a href="/professionnel/{{ request.user.id }}/"
+             class="btn btn-outline-primary btn-sm w-100 mt-3" style="border-radius:8px">
+            <i class="bi bi-box-arrow-up-right me-1"></i>Voir mon profil public
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         RIGHT COLUMN — messages
+         ══════════════════════════════════════════════════════ -->
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm h-100" style="border-radius:16px">
+        <div class="card-body p-4">
+
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="fw-bold mb-0" style="font-family:var(--font-display);color:var(--elan-navy)">
+              <i class="bi bi-chat-dots me-2" style="color:var(--elan-blue)"></i>Messages récents
+            </h5>
+            <a href="{% url 'chat-list' %}" class="btn btn-outline-primary btn-sm" style="border-radius:8px">
+              Voir tout
+            </a>
+          </div>
+
+          {% if recent_messages %}
+            <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+              {% for msg in recent_messages %}
+                <li>
+                  <a href="{% url 'private-chat' msg.sender.id %}"
+                     class="d-flex align-items-center gap-3 p-3 rounded text-decoration-none"
+                     style="background:#F8FAFC;border:1px solid #E2E8F0;transition:background .15s"
+                     onmouseenter="this.style.background='#EFF6FF'"
+                     onmouseleave="this.style.background='#F8FAFC'">
+
+                    {% if msg.sender.photo %}
+                      <img src="{{ msg.sender.photo.url }}"
+                           class="rounded-circle object-fit-cover flex-shrink-0"
+                           style="width:42px;height:42px"
+                           alt="{{ msg.sender.get_full_name }}">
+                    {% else %}
+                      <div class="rounded-circle d-flex align-items-center justify-content-center
+                                  fw-bold text-white flex-shrink-0"
+                           style="width:42px;height:42px;background:var(--elan-blue);font-size:.9rem">
+                        {{ msg.sender.first_name|first|upper }}{{ msg.sender.last_name|first|upper }}
+                      </div>
+                    {% endif %}
+
+                    <div class="flex-grow-1 min-w-0">
+                      <div class="d-flex align-items-center justify-content-between">
+                        <span class="fw-semibold small" style="color:var(--elan-navy)">
+                          {{ msg.sender.get_full_name }}
+                        </span>
+                        <span class="text-muted" style="font-size:.72rem">
+                          {{ msg.sent_at|timesince }} ago
+                        </span>
+                      </div>
+                      <p class="text-muted small mb-0 text-truncate">{{ msg.content }}</p>
+                    </div>
+
+                    {% if not msg.is_read %}
+                      <span class="badge rounded-pill bg-primary flex-shrink-0">New</span>
+                    {% endif %}
+
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="d-flex flex-column align-items-center justify-content-center py-5 text-center">
+              <i class="bi bi-inbox fs-1 text-muted mb-2"></i>
+              <p class="text-muted mb-0">Aucun message pour l'instant.</p>
+              <p class="text-muted small">Les étudiants pourront vous contacter ici.</p>
+            </div>
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

@@ -23,29 +23,14 @@
 
 {% include "partials/navbar_app.html" %}
 
-{% if messages %}
-  <div class="elan-container mt-2">
-    {% for message in messages %}
-      {% if message.tags == 'success' %}
-        <div class="alert-success-elan mb-2">
-          <i class="bi bi-check-circle-fill"></i>{{ message }}
-        </div>
-      {% elif message.tags == 'error' %}
-        <div class="alert-danger-elan mb-2">
-          <i class="bi bi-x-circle-fill"></i>{{ message }}
-        </div>
-      {% elif message.tags == 'warning' %}
-        <div class="alert-warning-elan mb-2">
-          <i class="bi bi-exclamation-triangle-fill"></i>{{ message }}
-        </div>
-      {% else %}
-        <div class="alert-info-elan mb-2">
-          <i class="bi bi-info-circle-fill"></i>{{ message }}
-        </div>
-      {% endif %}
-    {% endfor %}
-  </div>
-{% endif %}
+<div id="toast-container" style="position:fixed;top:75px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;">
+  {% for message in messages %}
+    <div class="elan-toast elan-toast-{{ message.tags }}" role="alert" style="pointer-events:all;">
+      <span class="elan-toast-text">{{ message }}</span>
+      <button onclick="this.closest('.elan-toast').dispatchEvent(new Event('dismiss'))" style="background:none;border:none;cursor:pointer;font-size:18px;opacity:0.6;padding:0;line-height:1;">&times;</button>
+    </div>
+  {% endfor %}
+</div>
 
 <main class="flex-grow-1">
   {% block content %}{% endblock %}

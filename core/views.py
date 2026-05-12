@@ -10,13 +10,15 @@ profil_view        — authenticated profile page
 
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView as DjangoLoginView
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.views import View
 from django.views.generic import TemplateView
 
-from chat.models import Message
+from chat.models import ChatGroup, Message
+from housing.models import HousingListing
 from .forms import LoginForm, ProfessionalProfileForm, RegisterForm
 from .models import ProfessionalProfile
 
@@ -28,20 +30,23 @@ User = get_user_model()
 # ==============================================================================
 
 def _role_dashboard_url(role):
-    """Return the redirect URL name for a given user role."""
+    """Return the URL name for the dashboard matching the given role."""
     if role == "admin":
         return "dashboard"
-    if role in ("lawyer", "orientation", "housing"):
-        return "espace-pro"
-    return "landing"  # student — show the landing page
+    if role == "student":
+        return "student_dashboard"
+    if role in ("lawyer", "orientation"):
+        return "pro_dashboard"
+    if role == "housing":
+        return "housing_dashboard"
+    return "landing"
 
 
 class LandingView(TemplateView):
     template_name = "core/landing.html"
 
     def get(self, request, *args, **kwargs):
-        # Redirect admin/pro to their dashboards; students see the landing page
-        if request.user.is_authenticated and request.user.role != "student":
+        if request.user.is_authenticated:
             return redirect(_role_dashboard_url(request.user.role))
         return super().get(request, *args, **kwargs)
 
@@ -265,3 +270,102 @@ def UpdateProfileProView(request):
         form = ProfessionalProfileForm(instance=pro_profile)
 
     return render(request, "core/update_profile_pro.html", {"form": form})
+
+
+# ==============================================================================
+# StudentDashboardView
+# ==============================================================================
+
+class StudentDashboardView(LoginRequiredMixin, View):
+    """Home dashboard for students."""
+
+    def get(self, request):
+        if request.user.role != "student":
+            return redirect(_role_dashboard_url(request.user.role))
+
+        recent_listings = (
+            HousingListing.objects
+            .filter(is_approved=True)
+            .order_by("-created_at")[:6]
+        )
+        recent_lawyers = (
+            User.objects
+            .filter(role="lawyer", is_validated=True)[:3]
+        )
+        recent_orienteurs = (
+            User.objects
+            .filter(role="orientation", is_validated=True)[:3]
+        )
+        user_groups = request.user.chat_groups.all()
+        unread_messages_count = (
+            Message.objects
+            .filter(receiver=request.user, is_read=False)
+            .count()
+        )
+
+        return render(request, "core/student_dashboard.html", {
+            "recent_listings":       recent_listings,
+            "recent_lawyers":        recent_lawyers,
+            "recent_orienteurs":     recent_orienteurs,
+            "user_groups":           user_groups,
+            "unread_messages_count": unread_messages_count,
+        })
+
+
+# ==============================================================================
+# ProDashboardView  (lawyer + orientation)
+# ==============================================================================
+
+def _profile_completion(user, pro_profile):
+    fields = [user.photo, user.city, user.phone,
+              pro_profile.bio, pro_profile.speciality, pro_profile.languages]
+    return int(sum(1 for f in fields if f) / len(fields) * 100)
+
+
+class ProDashboardView(LoginRequiredMixin, View):
+    """Dashboard for lawyers and orientation advisors."""
+
+    def get(self, request):
+        if request.user.role not in ("lawyer", "orientation"):
+            return redirect(_role_dashboard_url(request.user.role))
+
+        if not request.user.is_validated:
+            return render(request, "core/pending_validation.html")
+
+        pro_profile, _ = ProfessionalProfile.objects.get_or_create(user=request.user)
+        recent_messages = (
+            Message.objects
+            .filter(receiver=request.user)
+            .select_related("sender")
+            .order_by("-sent_at")[:5]
+        )
+
+        return render(request, "core/pro_dashboard.html", {
+            "professional_profile":        pro_profile,
+            "recent_messages":             recent_messages,
+            "profile_completion_percentage": _profile_completion(request.user, pro_profile),
+        })
+
+
+# ==============================================================================
+# HousingDashboardView
+# ==============================================================================
+
+class HousingDashboardView(LoginRequiredMixin, View):
+    """Dashboard for housing / landlord accounts."""
+
+    def get(self, request):
+        if request.user.role != "housing":
+            return redirect(_role_dashboard_url(request.user.role))
+
+        if not request.user.is_validated:
+            return render(request, "core/pending_validation.html")
+
+        my_listings = request.user.listings.all().order_by("-created_at")
+
+        return render(request, "core/housing_dashboard.html", {
+            "my_listings":       my_listings,
+            "approved_listings": my_listings.filter(is_approved=True).count(),
+            "pending_listings":  my_listings.filter(is_approved=False, is_active=True).count(),
+            "inactive_listings": my_listings.filter(is_active=False).count(),
+        })

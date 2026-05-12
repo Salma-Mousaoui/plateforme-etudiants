@@ -66,10 +66,22 @@
                 <i class="bi bi-shield-check me-1"></i>Admin Dashboard
               </a>
             </li>
-          {% elif request.user.role != 'student' %}
+          {% elif request.user.role == 'student' %}
             <li class="nav-item">
-              <a class="nav-link text-white" href="{% url 'espace-pro' %}">
-                <i class="bi bi-grid me-1"></i>My Space
+              <a class="nav-link text-white" href="{% url 'student_dashboard' %}">
+                <i class="bi bi-grid me-1"></i>Mon tableau de bord
+              </a>
+            </li>
+          {% elif request.user.role == 'housing' %}
+            <li class="nav-item">
+              <a class="nav-link text-white" href="{% url 'housing_dashboard' %}">
+                <i class="bi bi-building me-1"></i>Mes annonces
+              </a>
+            </li>
+          {% elif request.user.role == 'lawyer' or request.user.role == 'orientation' %}
+            <li class="nav-item">
+              <a class="nav-link text-white" href="{% url 'pro_dashboard' %}">
+                <i class="bi bi-person-badge me-1"></i>Mon espace pro
               </a>
             </li>
           {% endif %}
@@ -118,30 +130,15 @@
   </div>
 </nav>
 
-<!-- DJANGO MESSAGES — Elan alert components -->
-{% if messages %}
-  <div class="container mt-2">
-    {% for message in messages %}
-      {% if message.tags == 'success' %}
-        <div class="alert-success-elan mb-2">
-          <i class="bi bi-check-circle-fill"></i>{{ message }}
-        </div>
-      {% elif message.tags == 'error' %}
-        <div class="alert-danger-elan mb-2">
-          <i class="bi bi-x-circle-fill"></i>{{ message }}
-        </div>
-      {% elif message.tags == 'warning' %}
-        <div class="alert-warning-elan mb-2">
-          <i class="bi bi-exclamation-triangle-fill"></i>{{ message }}
-        </div>
-      {% else %}
-        <div class="alert-info-elan mb-2">
-          <i class="bi bi-info-circle-fill"></i>{{ message }}
-        </div>
-      {% endif %}
-    {% endfor %}
-  </div>
-{% endif %}
+<!-- DJANGO MESSAGES — auto-dismiss toasts -->
+<div id="toast-container" style="position:fixed;top:75px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;">
+  {% for message in messages %}
+    <div class="elan-toast elan-toast-{{ message.tags }}" role="alert" style="pointer-events:all;">
+      <span class="elan-toast-text">{{ message }}</span>
+      <button onclick="this.closest('.elan-toast').dispatchEvent(new Event('dismiss'))" style="background:none;border:none;cursor:pointer;font-size:18px;opacity:0.6;padding:0;line-height:1;">&times;</button>
+    </div>
+  {% endfor %}
+</div>
 
 <main>
 {% block content %}{% endblock content %}
