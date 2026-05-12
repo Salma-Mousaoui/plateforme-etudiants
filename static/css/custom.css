@@ -876,3 +876,82 @@ body {
 .elan-toast-debug,
 .elan-toast-        { background: #EFF6FF; border-left: 3px solid #2563EB; color: #1E40AF; }
 .elan-toast.hiding  { opacity: 0; transform: translateX(40px); }
+
+/* ============================================================
+   NAVBAR — Context-aware extensions (3-state navbar)
+============================================================ */
+.elan-navbar {
+  background: var(--elan-navy) !important;
+  min-height: 54px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 1px 12px rgba(0,0,0,.15);
+}
+@media (min-width: 992px) {
+  .elan-navbar { height: 54px; }
+}
+
+/* Nav link — inactive */
+.elan-nav-link {
+  color: rgba(255,255,255,.7) !important;
+  font-size: 13px;
+  font-family: var(--font-body);
+  transition: color .15s;
+}
+/* Nav link — active / hover */
+.elan-nav-link:hover,
+.elan-nav-link.active {
+  color: #fff !important;
+  font-weight: 600;
+}
+
+/* Avatar circle button */
+.elan-avatar-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--elan-navy);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  border: 2px solid rgba(255,255,255,.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+/* Avatar dropdown */
+.elan-dd {
+  background: #152d4a !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+  margin-top: 4px !important;
+}
+.elan-dd .dropdown-item {
+  color: rgba(255,255,255,.85);
+  font-size: 13px;
+  font-family: var(--font-body);
+}
+.elan-dd .dropdown-item:hover,
+.elan-dd .dropdown-item:focus {
+  background: rgba(255,255,255,.1) !important;
+  color: #fff;
+}
+.elan-dd .dropdown-divider { border-color: rgba(255,255,255,.12); }
+
+/* Mobile collapse panel */
+@media (max-width: 991.98px) {
+  .elan-navbar .navbar-collapse {
+    background: var(--elan-navy);
+    border-top: 1px solid rgba(255,255,255,.1);
+    padding: 10px 0 14px;
+  }
+  .elan-navbar .elan-nav-link {
+    padding-top: 7px;
+    padding-bottom: 7px;
+  }
+}
