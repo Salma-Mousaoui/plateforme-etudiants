@@ -36,7 +36,7 @@
       <!-- ─── STATE A: Auth page — logo only + back link ─── -->
       <a href="{% url 'landing' %}" class="ms-auto text-decoration-none"
          style="padding:6px 14px;border-radius:7px;font-size:13px;color:#fff;border:1px solid rgba(255,255,255,.3);background:transparent;font-family:var(--font-body);">
-        <i class="bi bi-arrow-left me-1"></i>Retour à l'accueil
+        <i class="bi bi-arrow-left me-1"></i>Back to Home
       </a>
 
     {% else %}
@@ -55,78 +55,66 @@
         <ul class="navbar-nav me-auto gap-lg-1 mt-2 mt-lg-0">
 
           {% if not request.user.is_authenticated %}
-            <!-- STATE B: Public visitor links -->
+            <!-- Unauthenticated visitor links -->
             <li class="nav-item">
               <a class="nav-link elan-nav-link{% if current_page == 'listings' %} active{% endif %}" href="{% url 'listings' %}">
-                <i class="bi bi-house me-1"></i>Logements
+                <i class="bi bi-house me-1"></i>Housing
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link elan-nav-link{% if current_page == 'lawyers' %} active{% endif %}" href="{% url 'lawyers' %}">
-                <i class="bi bi-briefcase me-1"></i>Avocats
+                <i class="bi bi-briefcase me-1"></i>Lawyers
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link elan-nav-link{% if current_page == 'counselors' %} active{% endif %}" href="{% url 'counselors' %}">
-                <i class="bi bi-mortarboard me-1"></i>Orienteurs
+                <i class="bi bi-mortarboard me-1"></i>Counselors
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link elan-nav-link{% if current_page == 'chat-list' %} active{% endif %}" href="{% url 'chat-list' %}">
-                <i class="bi bi-people me-1"></i>Communauté
+                <i class="bi bi-people me-1"></i>Community
               </a>
             </li>
 
           {% else %}
-            <!-- STATE C: Role-specific links -->
+            <!-- Authenticated: role-specific links — Dashboard always FIRST -->
             {% if user_role == 'student' %}
               <li class="nav-item">
+                <a class="nav-link elan-nav-link{% if current_page == 'student_dashboard' %} active{% endif %}" href="{% url 'student_dashboard' %}">
+                  <i class="bi bi-grid me-1"></i>My Dashboard
+                </a>
+              </li>
+              <li class="nav-item">
                 <a class="nav-link elan-nav-link{% if current_page == 'listings' %} active{% endif %}" href="{% url 'listings' %}">
-                  <i class="bi bi-house me-1"></i>Logements
+                  <i class="bi bi-house me-1"></i>Housing
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link elan-nav-link{% if current_page == 'lawyers' %} active{% endif %}" href="{% url 'lawyers' %}">
-                  <i class="bi bi-briefcase me-1"></i>Avocats
+                  <i class="bi bi-briefcase me-1"></i>Lawyers
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link elan-nav-link{% if current_page == 'counselors' %} active{% endif %}" href="{% url 'counselors' %}">
-                  <i class="bi bi-mortarboard me-1"></i>Orienteurs
+                  <i class="bi bi-mortarboard me-1"></i>Counselors
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link elan-nav-link{% if current_page == 'chat-list' %} active{% endif %}" href="{% url 'chat-list' %}">
-                  <i class="bi bi-chat-dots me-1"></i>Chat
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link elan-nav-link{% if current_page == 'student_dashboard' %} active{% endif %}" href="{% url 'student_dashboard' %}">
-                  <i class="bi bi-grid me-1"></i>Mon Dashboard
+                  <i class="bi bi-chat-dots me-1"></i>Community Chat
                 </a>
               </li>
 
             {% elif user_role == 'lawyer' or user_role == 'orientation' %}
               <li class="nav-item">
-                <a class="nav-link elan-nav-link{% if current_page == 'profil' %} active{% endif %}" href="{% url 'profil' %}">
-                  <i class="bi bi-person me-1"></i>Mon Profil
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link elan-nav-link{% if current_page == 'chat-list' %} active{% endif %}" href="{% url 'chat-list' %}">
-                  <i class="bi bi-chat-dots me-1"></i>Mes Messages
-                </a>
-              </li>
-              <li class="nav-item">
                 <a class="nav-link elan-nav-link{% if current_page == 'pro_dashboard' %} active{% endif %}" href="{% url 'pro_dashboard' %}">
-                  <i class="bi bi-person-badge me-1"></i>Mon Dashboard
+                  <i class="bi bi-person-badge me-1"></i>My Dashboard
                 </a>
               </li>
-
-            {% elif user_role == 'housing' %}
               <li class="nav-item">
-                <a class="nav-link elan-nav-link{% if current_page == 'my-listings' %} active{% endif %}" href="{% url 'my-listings' %}">
-                  <i class="bi bi-building me-1"></i>Mes Annonces
+                <a class="nav-link elan-nav-link{% if current_page == 'profil' %} active{% endif %}" href="{% url 'profil' %}">
+                  <i class="bi bi-person me-1"></i>My Profile
                 </a>
               </li>
               <li class="nav-item">
@@ -134,33 +122,45 @@
                   <i class="bi bi-chat-dots me-1"></i>Messages
                 </a>
               </li>
+
+            {% elif user_role == 'housing' %}
               <li class="nav-item">
                 <a class="nav-link elan-nav-link{% if current_page == 'housing_dashboard' %} active{% endif %}" href="{% url 'housing_dashboard' %}">
-                  <i class="bi bi-grid me-1"></i>Mon Dashboard
+                  <i class="bi bi-grid me-1"></i>My Dashboard
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link elan-nav-link{% if current_page == 'my-listings' %} active{% endif %}" href="{% url 'my-listings' %}">
+                  <i class="bi bi-building me-1"></i>My Listings
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link elan-nav-link{% if current_page == 'chat-list' %} active{% endif %}" href="{% url 'chat-list' %}">
+                  <i class="bi bi-chat-dots me-1"></i>Messages
                 </a>
               </li>
 
             {% elif user_role == 'admin' %}
               <li class="nav-item">
+                <a class="nav-link elan-nav-link{% if current_page == 'dashboard' %} active{% endif %}"
+                   href="{% url 'dashboard' %}"
+                   style="color:#F59E0B !important;">
+                  <i class="bi bi-shield-check me-1"></i>Dashboard
+                </a>
+              </li>
+              <li class="nav-item">
                 <a class="nav-link elan-nav-link{% if current_page == 'dashboard-users' %} active{% endif %}" href="{% url 'dashboard-users' %}">
-                  <i class="bi bi-people me-1"></i>Utilisateurs
+                  <i class="bi bi-people me-1"></i>Users
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link elan-nav-link{% if current_page == 'dashboard-listings' %} active{% endif %}" href="{% url 'dashboard-listings' %}">
-                  <i class="bi bi-card-list me-1"></i>Annonces
+                  <i class="bi bi-card-list me-1"></i>Listings
                 </a>
               </li>
               <li class="nav-item">
                 <a class="nav-link elan-nav-link{% if current_page == 'dashboard-reports' %} active{% endif %}" href="{% url 'dashboard-reports' %}">
-                  <i class="bi bi-flag me-1"></i>Signalements
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link elan-nav-link{% if current_page == 'dashboard' %} active{% endif %}"
-                   href="{% url 'dashboard' %}"
-                   style="color:#F59E0B !important;">
-                  <i class="bi bi-shield-check me-1"></i>Dashboard Admin
+                  <i class="bi bi-flag me-1"></i>Reports
                 </a>
               </li>
             {% endif %}
@@ -172,33 +172,33 @@
         <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
 
           {% if not request.user.is_authenticated %}
-            <!-- STATE B: Login / Register -->
+            <!-- Unauthenticated: Login / Sign Up -->
             <a href="{% url 'login' %}" class="text-decoration-none"
                style="padding:6px 14px;border-radius:7px;font-size:13px;color:#fff;border:1px solid rgba(255,255,255,.3);background:transparent;font-family:var(--font-body);white-space:nowrap;">
-              Connexion
+              Login
             </a>
             <a href="{% url 'register' %}" class="text-decoration-none"
                style="padding:6px 14px;border-radius:7px;font-size:13px;color:var(--elan-navy);background:#fff;font-weight:600;font-family:var(--font-body);white-space:nowrap;">
-              S'inscrire
+              Sign Up
             </a>
 
           {% else %}
             <!-- STATE C: Avatar + dropdown -->
             <div class="dropdown">
               <button type="button" class="elan-avatar-btn"
-                      data-bs-toggle="dropdown" aria-expanded="false" aria-label="Mon compte">
+                      data-bs-toggle="dropdown" aria-expanded="false" aria-label="My account">
                 {{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}
               </button>
               <ul class="dropdown-menu dropdown-menu-end elan-dd">
                 <li>
                   <a class="dropdown-item" href="{% url 'profil' %}">
-                    <i class="bi bi-person me-2"></i>Mon Profil
+                    <i class="bi bi-person me-2"></i>My Profile
                   </a>
                 </li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
                   <a class="dropdown-item" href="{% url 'logout' %}">
-                    <i class="bi bi-box-arrow-right me-2"></i>Déconnexion
+                    <i class="bi bi-box-arrow-right me-2"></i>Logout
                   </a>
                 </li>
               </ul>

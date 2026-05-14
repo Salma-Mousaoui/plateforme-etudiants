@@ -10,13 +10,21 @@ from reports.models import Report
 User = get_user_model()
 
 
+def _pro_dashboard_url(role):
+    if role in ("lawyer", "orientation"):
+        return "pro_dashboard"
+    if role == "housing":
+        return "housing_dashboard"
+    return "landing"
+
+
 class LawyerListView(ListView):
     template_name = "professionals/lawyer_list.html"
     context_object_name = "professionals"
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and request.user.role in ("lawyer", "orientation", "housing"):
-            return redirect("espace-pro")
+            return redirect(_pro_dashboard_url(request.user.role))
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -29,7 +37,7 @@ class AdvisorListView(ListView):
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and request.user.role in ("lawyer", "orientation", "housing"):
-            return redirect("espace-pro")
+            return redirect(_pro_dashboard_url(request.user.role))
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):

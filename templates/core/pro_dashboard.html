@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Mon espace professionnel — Elan{% endblock %}
+{% block title %}My Professional Space — Elan{% endblock %}
 
 {% block content %}
 <div class="elan-container mt-4 mb-5">
@@ -13,25 +13,25 @@
     <div>
       <div class="d-flex align-items-center gap-2 mb-1">
         <h1 class="fw-bold mb-0" style="font-family:var(--font-display);color:var(--elan-navy)">
-          Mon espace professionnel
+          My Professional Space
         </h1>
         {% if request.user.role == "lawyer" %}
-          <span class="badge bg-primary px-3 py-2">Avocat</span>
+          <span class="badge bg-primary px-3 py-2">Lawyer</span>
         {% else %}
-          <span class="badge bg-success px-3 py-2">Orienteur académique</span>
+          <span class="badge bg-success px-3 py-2">Academic Advisor</span>
         {% endif %}
       </div>
       <p class="text-muted mb-0">
-        <i class="bi bi-hand-wave me-1"></i>Bonjour, {{ request.user.get_full_name }}
+        <i class="bi bi-hand-wave me-1"></i>Hello, {{ request.user.get_full_name }}
       </p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
       <a href="/professionnel/{{ request.user.id }}/"
          class="btn btn-outline-primary btn-sm fw-semibold" style="border-radius:8px">
-        <i class="bi bi-eye me-1"></i>Mon profil public
+        <i class="bi bi-eye me-1"></i>My Public Profile
       </a>
       <a href="{% url 'profil' %}" class="btn btn-outline-secondary btn-sm" style="border-radius:8px">
-        <i class="bi bi-person-gear me-1"></i>Mon compte
+        <i class="bi bi-person-gear me-1"></i>My Account
       </a>
     </div>
   </div>
@@ -47,7 +47,7 @@
       <div class="card border-0 shadow-sm mb-4" style="border-radius:16px">
         <div class="card-body p-4">
           <h5 class="fw-bold mb-3" style="font-family:var(--font-display);color:var(--elan-navy)">
-            <i class="bi bi-bar-chart-line me-2" style="color:var(--elan-blue)"></i>Complétion du profil
+            <i class="bi bi-bar-chart-line me-2" style="color:var(--elan-blue)"></i>Profile Completion
           </h5>
 
           <div class="d-flex align-items-center gap-3 mb-2">
@@ -66,24 +66,24 @@
 
           {% if profile_completion_percentage < 100 %}
             <p class="text-muted small mb-3">
-              Complétez votre profil pour être mieux visible par les étudiants.
+              Complete your profile to be more visible to students.
             </p>
           {% else %}
             <p class="text-muted small mb-3">
-              <i class="bi bi-check-circle-fill text-success me-1"></i>Profil complet !
+              <i class="bi bi-check-circle-fill text-success me-1"></i>Profile complete!
             </p>
           {% endif %}
 
           <div class="mb-3">
-            {% if not request.user.photo %}<div class="text-muted small"><i class="bi bi-x-circle text-danger me-1"></i>Photo de profil</div>{% else %}<div class="text-muted small"><i class="bi bi-check-circle text-success me-1"></i>Photo de profil</div>{% endif %}
-            {% if not request.user.city %}<div class="text-muted small"><i class="bi bi-x-circle text-danger me-1"></i>Ville</div>{% else %}<div class="text-muted small"><i class="bi bi-check-circle text-success me-1"></i>Ville</div>{% endif %}
+            {% if not request.user.photo %}<div class="text-muted small"><i class="bi bi-x-circle text-danger me-1"></i>Profile photo</div>{% else %}<div class="text-muted small"><i class="bi bi-check-circle text-success me-1"></i>Profile photo</div>{% endif %}
+            {% if not request.user.city %}<div class="text-muted small"><i class="bi bi-x-circle text-danger me-1"></i>City</div>{% else %}<div class="text-muted small"><i class="bi bi-check-circle text-success me-1"></i>City</div>{% endif %}
             {% if not professional_profile.bio %}<div class="text-muted small"><i class="bi bi-x-circle text-danger me-1"></i>Bio</div>{% else %}<div class="text-muted small"><i class="bi bi-check-circle text-success me-1"></i>Bio</div>{% endif %}
-            {% if not professional_profile.speciality %}<div class="text-muted small"><i class="bi bi-x-circle text-danger me-1"></i>Spécialité</div>{% else %}<div class="text-muted small"><i class="bi bi-check-circle text-success me-1"></i>Spécialité</div>{% endif %}
+            {% if not professional_profile.speciality %}<div class="text-muted small"><i class="bi bi-x-circle text-danger me-1"></i>Specialty</div>{% else %}<div class="text-muted small"><i class="bi bi-check-circle text-success me-1"></i>Specialty</div>{% endif %}
           </div>
 
           <a href="{% url 'update-profile-pro' %}"
              class="btn btn-primary w-100 fw-semibold py-2" style="border-radius:10px">
-            <i class="bi bi-pencil-square me-1"></i>Modifier mon profil
+            <i class="bi bi-pencil-square me-1"></i>Edit My Profile
           </a>
         </div>
       </div>
@@ -92,7 +92,7 @@
       <div class="card border-0 shadow-sm" style="border-radius:16px">
         <div class="card-body p-4 text-center">
           <h5 class="fw-bold mb-4" style="font-family:var(--font-display);color:var(--elan-navy)">
-            <i class="bi bi-eye me-2" style="color:var(--elan-blue)"></i>Aperçu public
+            <i class="bi bi-eye me-2" style="color:var(--elan-blue)"></i>Public Preview
           </h5>
 
           {% if request.user.photo %}
@@ -113,11 +113,11 @@
 
           {% if request.user.role == "lawyer" %}
             <span class="badge bg-primary px-3 py-2 mb-3">
-              <i class="bi bi-briefcase me-1"></i>Avocat
+              <i class="bi bi-briefcase me-1"></i>Lawyer
             </span>
           {% else %}
             <span class="badge bg-success px-3 py-2 mb-3">
-              <i class="bi bi-journal-text me-1"></i>Orienteur académique
+              <i class="bi bi-journal-text me-1"></i>Academic Advisor
             </span>
           {% endif %}
 
@@ -126,7 +126,7 @@
               {{ professional_profile.bio|truncatewords:25 }}
             </p>
           {% else %}
-            <p class="text-muted small fst-italic mb-3">Aucune bio pour l'instant.</p>
+            <p class="text-muted small fst-italic mb-3">No bio yet.</p>
           {% endif %}
 
           {% if professional_profile.speciality %}
@@ -146,7 +146,7 @@
 
           <a href="/professionnel/{{ request.user.id }}/"
              class="btn btn-outline-primary btn-sm w-100 mt-3" style="border-radius:8px">
-            <i class="bi bi-box-arrow-up-right me-1"></i>Voir mon profil public
+            <i class="bi bi-box-arrow-up-right me-1"></i>View My Public Profile
           </a>
         </div>
       </div>
@@ -162,10 +162,10 @@
 
           <div class="d-flex align-items-center justify-content-between mb-3">
             <h5 class="fw-bold mb-0" style="font-family:var(--font-display);color:var(--elan-navy)">
-              <i class="bi bi-chat-dots me-2" style="color:var(--elan-blue)"></i>Messages récents
+              <i class="bi bi-chat-dots me-2" style="color:var(--elan-blue)"></i>Recent Messages
             </h5>
             <a href="{% url 'chat-list' %}" class="btn btn-outline-primary btn-sm" style="border-radius:8px">
-              Voir tout
+              View All
             </a>
           </div>
 
@@ -215,8 +215,8 @@
           {% else %}
             <div class="d-flex flex-column align-items-center justify-content-center py-5 text-center">
               <i class="bi bi-inbox fs-1 text-muted mb-2"></i>
-              <p class="text-muted mb-0">Aucun message pour l'instant.</p>
-              <p class="text-muted small">Les étudiants pourront vous contacter ici.</p>
+              <p class="text-muted mb-0">No messages yet.</p>
+              <p class="text-muted small">Students will be able to contact you here.</p>
             </div>
           {% endif %}
 

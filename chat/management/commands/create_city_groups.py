@@ -2,9 +2,9 @@ from django.core.management.base import BaseCommand
 from chat.models import ChatGroup
 
 CITY_GROUPS = [
-    {"name": "Paris - Étudiants", "city": "Paris"},
-    {"name": "Lyon - Étudiants", "city": "Lyon"},
-    {"name": "Marseille - Étudiants", "city": "Marseille"},
+    {"name": "Paris - Students", "city": "Paris"},
+    {"name": "Lyon - Students", "city": "Lyon"},
+    {"name": "Marseille - Students", "city": "Marseille"},
 ]
 
 

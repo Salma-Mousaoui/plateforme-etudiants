@@ -1,7 +1,7 @@
 """
 Models for the housing app.
 
-Role : Gestion des annonces de logements.
+Role : Housing listing management.
 """
 
 from django.db import models
@@ -39,6 +39,6 @@ class HousingListing(models.Model):
         return f"{self.title} — {self.city} ({self.price}€/month)"
 
     class Meta:
-        verbose_name = "Annonce de logement"
-        verbose_name_plural = "Annonces de logement"
+        verbose_name = "Housing Listing"
+        verbose_name_plural = "Housing Listings"
         ordering = ["-created_at"]

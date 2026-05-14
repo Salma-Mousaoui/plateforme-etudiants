@@ -123,8 +123,8 @@ def EditListingView(request, pk):
     form = HousingListingForm(request.POST or None, request.FILES or None, instance=listing)
     if form.is_valid():
         form.save()
-        messages.success(request, "Listing updated successfully")
-        return redirect("espace-pro")
+        messages.success(request, "Listing updated successfully.")
+        return redirect("housing_dashboard")
     return render(request, "housing/modifier_annonce.html", {"form": form, "listing": listing})
 
 
@@ -133,6 +133,6 @@ def DeleteListingView(request, pk):
     listing = get_object_or_404(HousingListing, pk=pk, owner=request.user)
     if request.method == "POST":
         listing.delete()
-        messages.success(request, "Listing deleted successfully")
-        return redirect("espace-pro")
+        messages.success(request, "Listing deleted successfully.")
+        return redirect("housing_dashboard")
     return render(request, "housing/confirmer_suppression.html", {"listing": listing})

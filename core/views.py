@@ -283,32 +283,21 @@ class StudentDashboardView(LoginRequiredMixin, View):
         if request.user.role != "student":
             return redirect(_role_dashboard_url(request.user.role))
 
-        recent_listings = (
-            HousingListing.objects
-            .filter(is_approved=True)
-            .order_by("-created_at")[:6]
-        )
-        recent_lawyers = (
-            User.objects
-            .filter(role="lawyer", is_validated=True)[:3]
-        )
-        recent_orienteurs = (
-            User.objects
-            .filter(role="orientation", is_validated=True)[:3]
-        )
-        user_groups = request.user.chat_groups.all()
-        unread_messages_count = (
-            Message.objects
-            .filter(receiver=request.user, is_read=False)
-            .count()
-        )
+        approved_qs   = HousingListing.objects.filter(is_approved=True)
+        lawyers_qs    = User.objects.filter(role="lawyer", is_validated=True)
+        orienteurs_qs = User.objects.filter(role="orientation", is_validated=True)
 
         return render(request, "core/student_dashboard.html", {
-            "recent_listings":       recent_listings,
-            "recent_lawyers":        recent_lawyers,
-            "recent_orienteurs":     recent_orienteurs,
-            "user_groups":           user_groups,
-            "unread_messages_count": unread_messages_count,
+            "recent_listings":       approved_qs.order_by("-created_at")[:6],
+            "recent_lawyers":        lawyers_qs[:3],
+            "recent_orienteurs":     orienteurs_qs[:3],
+            "listings_count":        approved_qs.count(),
+            "lawyers_count":         lawyers_qs.count(),
+            "orienteurs_count":      orienteurs_qs.count(),
+            "user_groups":           request.user.chat_groups.all(),
+            "unread_messages_count": Message.objects.filter(
+                receiver=request.user, is_read=False
+            ).count(),
         })
 
 

@@ -1,7 +1,7 @@
 """
 Models for the professionals app.
 
-Role : Annuaire de professionnels (médecins, avocats, etc.), avis, et prise de rendez-vous.
+Role : Professional directory (doctors, lawyers, etc.), reviews, and appointment booking.
 """
 
 from django.db import models  # noqa: F401

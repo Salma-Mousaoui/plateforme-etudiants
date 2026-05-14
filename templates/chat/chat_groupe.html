@@ -202,7 +202,7 @@
 
     <div class="p-3">
       <p class="text-muted small fw-semibold mb-2" style="letter-spacing:.05em;">
-        MEMBRES ({{ group.members.count }})
+        MEMBERS ({{ group.members.count }})
       </p>
       {% for member in group.members.all %}
         <div class="member-row">
@@ -215,7 +215,7 @@
           {% endif %}
           <span class="small flex-grow-1">{{ member.get_full_name|default:member.username }}</span>
           {% if member == request.user %}
-            <span class="badge bg-light text-secondary" style="font-size:10px;">Moi</span>
+            <span class="badge bg-light text-secondary" style="font-size:10px;">Me</span>
           {% endif %}
         </div>
       {% endfor %}
@@ -257,14 +257,14 @@
       {% empty %}
         <div class="text-center text-muted mt-auto mb-auto">
           <i class="bi bi-chat-dots" style="font-size:2.5rem;color:#d1d5db;"></i>
-          <p class="mt-2 small">Soyez le premier à écrire dans ce groupe !</p>
+          <p class="mt-2 small">Be the first to write in this group!</p>
         </div>
       {% endfor %}
     </div>
 
     <div class="chat-input-bar">
-      <textarea id="msg-input" rows="1" placeholder="Écrire un message…"></textarea>
-      <button class="btn-send" id="btn-send" title="Envoyer">
+      <textarea id="msg-input" rows="1" placeholder="Write a message…"></textarea>
+      <button class="btn-send" id="btn-send" title="Send">
         <i class="bi bi-send-fill"></i>
       </button>
     </div>
@@ -296,7 +296,7 @@
   };
 
   ws.onclose = function () {
-    console.warn("WebSocket group chat fermé.");
+    console.warn("WebSocket group chat closed.");
   };
 
   function sendMessage() {

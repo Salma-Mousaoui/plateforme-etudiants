@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Mes annonces — Elan{% endblock %}
+{% block title %}My Listings — Elan{% endblock %}
 
 {% block content %}
 <div class="elan-container mt-4 mb-5">
@@ -13,21 +13,21 @@
     <div>
       <div class="d-flex align-items-center gap-2 mb-1">
         <h1 class="fw-bold mb-0" style="font-family:var(--font-display);color:var(--elan-navy)">
-          Mes annonces
+          My Listings
         </h1>
-        <span class="badge bg-warning text-dark px-3 py-2">Propriétaire / Agence</span>
+        <span class="badge bg-warning text-dark px-3 py-2">Landlord / Agency</span>
       </div>
       <p class="text-muted mb-0">
-        <i class="bi bi-hand-wave me-1"></i>Bonjour, {{ request.user.get_full_name }}
+        <i class="bi bi-hand-wave me-1"></i>Hello, {{ request.user.get_full_name }}
       </p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
       <a href="{% url 'create-listing' %}"
          class="btn btn-primary fw-semibold" style="border-radius:8px">
-        <i class="bi bi-plus-lg me-1"></i>Publier une annonce
+        <i class="bi bi-plus-lg me-1"></i>Post a Listing
       </a>
       <a href="{% url 'profil' %}" class="btn btn-outline-secondary btn-sm" style="border-radius:8px">
-        <i class="bi bi-person-gear me-1"></i>Mon compte
+        <i class="bi bi-person-gear me-1"></i>My Account
       </a>
     </div>
   </div>
@@ -41,7 +41,7 @@
       <div class="card border-0 shadow-sm text-center p-3" style="border-radius:14px">
         <div class="fw-bold fs-3" style="color:#16A34A">{{ approved_listings }}</div>
         <div class="text-muted small d-flex align-items-center justify-content-center gap-1">
-          <i class="bi bi-check-circle-fill text-success"></i>Publiées
+          <i class="bi bi-check-circle-fill text-success"></i>Published
         </div>
       </div>
     </div>
@@ -50,7 +50,7 @@
       <div class="card border-0 shadow-sm text-center p-3" style="border-radius:14px">
         <div class="fw-bold fs-3" style="color:#D97706">{{ pending_listings }}</div>
         <div class="text-muted small d-flex align-items-center justify-content-center gap-1">
-          <i class="bi bi-clock-fill text-warning"></i>En attente
+          <i class="bi bi-clock-fill text-warning"></i>Pending
         </div>
       </div>
     </div>
@@ -59,7 +59,7 @@
       <div class="card border-0 shadow-sm text-center p-3" style="border-radius:14px">
         <div class="fw-bold fs-3" style="color:#6B7280">{{ inactive_listings }}</div>
         <div class="text-muted small d-flex align-items-center justify-content-center gap-1">
-          <i class="bi bi-dash-circle text-secondary"></i>Inactives
+          <i class="bi bi-dash-circle text-secondary"></i>Inactive
         </div>
       </div>
     </div>
@@ -74,10 +74,10 @@
 
       <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
         <h4 class="fw-bold mb-0" style="font-family:var(--font-display);color:var(--elan-navy)">
-          <i class="bi bi-building me-2" style="color:var(--elan-blue)"></i>Toutes mes annonces
+          <i class="bi bi-building me-2" style="color:var(--elan-blue)"></i>All My Listings
         </h4>
         <a href="{% url 'create-listing' %}" class="btn btn-primary btn-sm" style="border-radius:8px">
-          <i class="bi bi-plus-lg me-1"></i>Nouvelle annonce
+          <i class="bi bi-plus-lg me-1"></i>New Listing
         </a>
       </div>
 
@@ -86,11 +86,11 @@
           <table class="table table-hover align-middle mb-0">
             <thead style="background:var(--elan-blue-light)">
               <tr>
-                <th style="color:var(--elan-navy)" class="px-3 py-3">Titre</th>
-                <th style="color:var(--elan-navy)">Ville</th>
+                <th style="color:var(--elan-navy)" class="px-3 py-3">Title</th>
+                <th style="color:var(--elan-navy)">City</th>
                 <th style="color:var(--elan-navy)">Type</th>
-                <th style="color:var(--elan-navy)">Prix</th>
-                <th style="color:var(--elan-navy)">Statut</th>
+                <th style="color:var(--elan-navy)">Price</th>
+                <th style="color:var(--elan-navy)">Status</th>
                 <th style="color:var(--elan-navy)">Actions</th>
               </tr>
             </thead>
@@ -113,25 +113,25 @@
                     {% if not listing.is_active %}
                       <span class="badge bg-secondary">Inactive</span>
                     {% elif listing.is_approved %}
-                      <span class="badge bg-success">Publiée</span>
+                      <span class="badge bg-success">Published</span>
                     {% else %}
-                      <span class="badge bg-warning text-dark">En attente</span>
+                      <span class="badge bg-warning text-dark">Pending</span>
                     {% endif %}
                   </td>
                   <td>
                     <a href="{% url 'listing-detail' listing.pk %}"
                        class="btn btn-outline-secondary btn-sm me-1" style="border-radius:6px"
-                       title="Voir">
+                       title="View">
                       <i class="bi bi-eye"></i>
                     </a>
                     <a href="{% url 'edit-listing' listing.pk %}"
                        class="btn btn-outline-primary btn-sm me-1" style="border-radius:6px"
-                       title="Modifier">
+                       title="Edit">
                       <i class="bi bi-pencil"></i>
                     </a>
                     <a href="{% url 'delete-listing' listing.pk %}"
                        class="btn btn-outline-danger btn-sm" style="border-radius:6px"
-                       title="Supprimer">
+                       title="Delete">
                       <i class="bi bi-trash"></i>
                     </a>
                   </td>
@@ -143,10 +143,10 @@
       {% else %}
         <div class="d-flex flex-column align-items-center justify-content-center py-5 text-center">
           <i class="bi bi-building fs-1 text-muted mb-3" style="opacity:.4"></i>
-          <h5 class="fw-semibold mb-1" style="color:var(--elan-navy)">Aucune annonce pour l'instant</h5>
-          <p class="text-muted mb-3">Publiez votre première annonce pour être visible par les étudiants.</p>
+          <h5 class="fw-semibold mb-1" style="color:var(--elan-navy)">No listings yet</h5>
+          <p class="text-muted mb-3">Post your first listing to be visible to students.</p>
           <a href="{% url 'create-listing' %}" class="btn btn-primary fw-semibold" style="border-radius:8px">
-            <i class="bi bi-plus-lg me-1"></i>Publier une annonce
+            <i class="bi bi-plus-lg me-1"></i>Post a Listing
           </a>
         </div>
       {% endif %}
