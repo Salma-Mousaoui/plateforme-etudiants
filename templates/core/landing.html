@@ -112,19 +112,45 @@
 </section>
 
 <!-- ============================================================
-  SECTION 2 — TRUST BADGES (scrolling pills below hero)
-  Show: Madrid · Barcelona · Valencia · Sevilla · Bilbao
+  SECTION 2 — PRÉSENCE VILLES (stats / social proof)
+  Background: --elan-blue-light (#EFF6FF), py-5
+  Title + city pills (links → listings?ville=) + 3 counters
 ============================================================ -->
-<section class="trust-section py-3">
-  <div class="container">
-    <div class="d-flex flex-wrap gap-3 justify-content-center">
-      <span class="trust-pill"><i class="bi bi-geo-alt-fill me-1"></i>Madrid</span>
-      <span class="trust-pill"><i class="bi bi-geo-alt-fill me-1"></i>Barcelona</span>
-      <span class="trust-pill"><i class="bi bi-geo-alt-fill me-1"></i>Valencia</span>
-      <span class="trust-pill"><i class="bi bi-geo-alt-fill me-1"></i>Sevilla</span>
-      <span class="trust-pill"><i class="bi bi-geo-alt-fill me-1"></i>Bilbao</span>
-      <span class="trust-pill"><i class="bi bi-geo-alt-fill me-1"></i>Granada</span>
+<section class="py-5" style="background: var(--elan-blue-light); border-bottom: 1px solid #dbeafe;">
+  <div class="container text-center">
+
+    <!-- Label + titre -->
+    <p class="t-label mb-2" style="color: var(--elan-blue);">NOTRE PRÉSENCE</p>
+    <h2 class="mb-4" style="font-family:'Sora',sans-serif; font-size:1.5rem; font-weight:700; color: var(--elan-navy);">
+      Présents dans 6 villes en Espagne
+    </h2>
+
+    <!-- Pills-liens vers /logements/?ville= -->
+    <div class="d-flex flex-wrap gap-3 justify-content-center mb-5">
+      <a href="{% url 'listings' %}?ville=Madrid"    class="trust-pill text-decoration-none"><i class="bi bi-geo-alt-fill me-1"></i>Madrid</a>
+      <a href="{% url 'listings' %}?ville=Barcelona" class="trust-pill text-decoration-none"><i class="bi bi-geo-alt-fill me-1"></i>Barcelona</a>
+      <a href="{% url 'listings' %}?ville=Valencia"  class="trust-pill text-decoration-none"><i class="bi bi-geo-alt-fill me-1"></i>Valencia</a>
+      <a href="{% url 'listings' %}?ville=Sevilla"   class="trust-pill text-decoration-none"><i class="bi bi-geo-alt-fill me-1"></i>Sevilla</a>
+      <a href="{% url 'listings' %}?ville=Bilbao"    class="trust-pill text-decoration-none"><i class="bi bi-geo-alt-fill me-1"></i>Bilbao</a>
+      <a href="{% url 'listings' %}?ville=Granada"   class="trust-pill text-decoration-none"><i class="bi bi-geo-alt-fill me-1"></i>Granada</a>
     </div>
+
+    <!-- 3 chiffres clés -->
+    <div class="row g-4 justify-content-center">
+      <div class="col-6 col-md-4 col-lg-3">
+        <div style="font-family:'Sora',sans-serif; font-size:2rem; font-weight:700; color: var(--elan-navy);">500+</div>
+        <div class="t-muted mt-1">Étudiants</div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-3">
+        <div style="font-family:'Sora',sans-serif; font-size:2rem; font-weight:700; color: var(--elan-navy);">50+</div>
+        <div class="t-muted mt-1">Logements vérifiés</div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-3">
+        <div style="font-family:'Sora',sans-serif; font-size:2rem; font-weight:700; color: var(--elan-navy);">30+</div>
+        <div class="t-muted mt-1">Professionnels</div>
+      </div>
+    </div>
+
   </div>
 </section>
 
