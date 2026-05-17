@@ -536,8 +536,8 @@
     }
 
     chatSocket.send(JSON.stringify({ message: msg, sender_id: ME }));
-    appendMessage(msg, ME, now(), false, null);
-    scrollToBottom();
+    // OPTION A : le consumer rebroadcast à tous les membres y compris l'expéditeur.
+    // L'affichage est géré uniquement par onmessage pour éviter le double affichage.
     input.value = "";
   }
 

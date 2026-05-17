@@ -289,9 +289,13 @@
 
   ws.onmessage = function (e) {
     const data = JSON.parse(e.data);
-    // The consumer echoes to all members including sender — skip own echo
-    if (data.sender !== ME) {
-      appendBubble(data.message, data.sender, false);
+    // Ignorer les messages d'historique déjà rendus par Django au chargement
+    if (data.type === "history_item") return;
+    // OPTION B : appendBubble est appelé dans sendMessage pour l'expéditeur.
+    // Le consumer rebroadcast à tous y compris l'expéditeur : on filtre l'écho
+    // en comparant data.sender_name (champ envoyé par le consumer) avec ME.
+    if (data.sender_name !== ME) {
+      appendBubble(data.message, data.sender_name, false);
     }
   };
 
