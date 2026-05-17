@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load photo_tags %}
 
 {% block title %}{{ pro.get_full_name }} — Elan{% endblock %}
 
@@ -17,18 +18,20 @@
       <div class="card border-0 shadow-sm p-4 text-center" style="border-radius:16px;position:sticky;top:70px">
 
         <!-- Large photo -->
-        {% if pro.photo %}
-          <img src="{{ pro.photo.url }}"
-               class="rounded-circle mx-auto mb-3 object-fit-cover"
-               style="width:110px;height:110px;border:4px solid var(--elan-blue-light)"
-               alt="{{ pro.get_full_name }}">
-        {% else %}
-          <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center fw-bold"
-               style="width:110px;height:110px;font-size:2.2rem;font-family:var(--font-display);
-               {% if pro.role == 'lawyer' %}background:#EFF6FF;color:#2563EB;{% else %}background:#F0FDF4;color:#16A34A;{% endif %}">
-            {{ pro.first_name|first|upper }}{{ pro.last_name|first|upper }}
-          </div>
-        {% endif %}
+        {% with photo_url=pro.photo|photo_url_or_none %}
+          {% if photo_url %}
+            <img src="{{ photo_url }}"
+                 class="rounded-circle mx-auto mb-3 object-fit-cover"
+                 style="width:110px;height:110px;border:4px solid var(--elan-blue-light)"
+                 alt="{{ pro.get_full_name }}">
+          {% else %}
+            <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center fw-bold"
+                 style="width:110px;height:110px;font-size:2.2rem;font-family:var(--font-display);
+                 {% if pro.role == 'lawyer' %}background:#EFF6FF;color:#2563EB;{% else %}background:#F0FDF4;color:#16A34A;{% endif %}">
+              {{ pro.get_initials }}
+            </div>
+          {% endif %}
+        {% endwith %}
 
         <!-- Name -->
         <h4 class="fw-bold mb-2" style="font-family:var(--font-display);color:var(--elan-navy)">

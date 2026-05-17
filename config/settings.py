@@ -36,6 +36,7 @@ INSTALLED_APPS = [
 
     # Third-party
     'channels',
+    'storages',
 
     # Local apps
     'core',
@@ -171,3 +172,27 @@ MESSAGE_TAGS = {message_constants.ERROR: 'danger'}
 # ==============================================================================
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ==============================================================================
+# SUPABASE STORAGE (django-storages + boto3 S3 backend)
+# Set USE_SUPABASE_STORAGE=True in .env to enable cloud storage.
+# ==============================================================================
+
+USE_SUPABASE_STORAGE = config('USE_SUPABASE_STORAGE', default=False, cast=bool)
+
+if USE_SUPABASE_STORAGE:
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    AWS_S3_ENDPOINT_URL = config('SUPABASE_S3_ENDPOINT')
+    AWS_ACCESS_KEY_ID = config('SUPABASE_ACCESS_KEY')
+    AWS_SECRET_ACCESS_KEY = config('SUPABASE_SECRET_KEY')
+    AWS_STORAGE_BUCKET_NAME = 'profiles'
+    AWS_S3_REGION_NAME = config('SUPABASE_REGION', default='eu-west-1')
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = 'public-read'
+    AWS_QUERYSTRING_AUTH = False
+    SUPABASE_URL = config('SUPABASE_URL')
+    MEDIA_URL = f"{SUPABASE_URL}/storage/v1/object/public/"
+else:
+    if not globals().get('MEDIA_URL'):
+        MEDIA_URL = '/media/'
+        MEDIA_ROOT = BASE_DIR / 'media'

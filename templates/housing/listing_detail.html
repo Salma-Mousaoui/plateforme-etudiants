@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load photo_tags %}
 
 {% block title %}{{ object.title }} — Elan{% endblock %}
 
@@ -17,13 +18,22 @@
 
       <!-- Photo gallery / placeholder -->
       <div class="card border-0 shadow-sm mb-4 overflow-hidden" style="border-radius:14px">
-        <div class="d-flex align-items-center justify-content-center"
-             style="height:320px;background:var(--elan-blue-light)">
-          <div class="text-center">
-            <i class="bi bi-image" style="font-size:4rem;color:var(--elan-blue);opacity:.3"></i>
-            <p class="text-muted small mt-2 mb-0">No photos available</p>
-          </div>
-        </div>
+        {% with photo_url=object.photo|photo_url_or_none %}
+          {% if photo_url %}
+            <img src="{{ photo_url }}"
+                 class="w-100 object-fit-cover"
+                 style="height:320px;"
+                 alt="{{ object.title }}">
+          {% else %}
+            <div class="d-flex align-items-center justify-content-center"
+                 style="height:320px;background:var(--elan-blue-light)">
+              <div class="text-center">
+                <i class="bi bi-building" style="font-size:4rem;color:var(--elan-blue);opacity:.3"></i>
+                <p class="text-muted small mt-2 mb-0">No photos available</p>
+              </div>
+            </div>
+          {% endif %}
+        {% endwith %}
       </div>
 
       <!-- Title -->
@@ -86,17 +96,19 @@
           <p class="text-muted small text-uppercase fw-semibold mb-3" style="letter-spacing:.05em">Posted by</p>
 
           <div class="d-flex align-items-center gap-3 mb-4">
-            {% if object.owner.photo %}
-              <img src="{{ object.owner.photo.url }}"
-                   class="rounded-circle object-fit-cover"
-                   style="width:48px;height:48px;border:2px solid var(--elan-blue-light)"
-                   alt="Owner photo">
-            {% else %}
-              <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                   style="width:48px;height:48px;background:var(--elan-blue-light);border:2px solid var(--elan-blue-light)">
-                <i class="bi bi-person-fill" style="font-size:1.4rem;color:var(--elan-blue)"></i>
-              </div>
-            {% endif %}
+            {% with owner_photo_url=object.owner.photo|photo_url_or_none %}
+              {% if owner_photo_url %}
+                <img src="{{ owner_photo_url }}"
+                     class="rounded-circle object-fit-cover"
+                     style="width:48px;height:48px;border:2px solid var(--elan-blue-light)"
+                     alt="Owner photo">
+              {% else %}
+                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                     style="width:48px;height:48px;background:var(--elan-blue-light);border:2px solid var(--elan-blue-light)">
+                  <i class="bi bi-person-fill" style="font-size:1.4rem;color:var(--elan-blue)"></i>
+                </div>
+              {% endif %}
+            {% endwith %}
             <div>
               <p class="fw-semibold mb-0" style="color:var(--elan-navy)">
                 {{ object.owner.get_full_name|default:object.owner.username }}

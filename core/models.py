@@ -40,6 +40,17 @@ class User(AbstractUser):
         """Returns True if the user is a professional."""
         return self.role in ["lawyer", "orientation", "housing"]
 
+    def get_initials(self):
+        return f"{self.first_name[:1]}{self.last_name[:1]}".upper()
+
+    def get_photo_url(self):
+        if self.photo:
+            try:
+                return self.photo.url
+            except Exception:
+                return None
+        return None
+
 
 class ProfessionalProfile(models.Model):
     """

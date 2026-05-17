@@ -38,7 +38,29 @@ class HousingListing(models.Model):
     def __str__(self):
         return f"{self.title} — {self.city} ({self.price}€/month)"
 
+    def get_photo_url(self):
+        if self.photo:
+            try:
+                return self.photo.url
+            except Exception:
+                return None
+        return None
+
     class Meta:
         verbose_name = "Housing Listing"
         verbose_name_plural = "Housing Listings"
         ordering = ["-created_at"]
+
+
+class ListingPhoto(models.Model):
+    listing = models.ForeignKey(
+        HousingListing, on_delete=models.CASCADE, related_name='photos'
+    )
+    image = models.ImageField(upload_to='listings/gallery/')
+    ordre = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['ordre']
+
+    def __str__(self):
+        return f"Photo #{self.ordre} - {self.listing.title}"

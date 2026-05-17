@@ -7,3 +7,5 @@ pillow
 whitenoise
 dj-database-url
 faker
+django-storages[s3]
+boto3

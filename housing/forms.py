@@ -21,3 +21,9 @@ class HousingListingForm(forms.ModelForm):
         if price is not None and price <= 0:
             raise forms.ValidationError("Price must be greater than 0.")
         return price
+
+    def clean_photo(self):
+        photo = self.cleaned_data.get("photo")
+        if photo and hasattr(photo, 'size') and photo.size > 5 * 1024 * 1024:
+            raise forms.ValidationError("La photo ne doit pas dépasser 5 MB")
+        return photo

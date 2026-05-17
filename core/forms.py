@@ -187,7 +187,7 @@ class ProfessionalProfileForm(forms.ModelForm):
 
     photo = forms.ImageField(
         required=False,
-        widget=forms.FileInput(attrs={"class": "form-control"}),
+        widget=forms.FileInput(attrs={"class": "form-control", "accept": "image/*"}),
     )
 
     class Meta:
