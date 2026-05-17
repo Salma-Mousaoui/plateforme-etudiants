@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static photo_tags %}
 
 {% block title %}Housing Listings — Elan{% endblock %}
 
@@ -154,9 +154,15 @@
 
               <!-- Image + badges -->
               <div class="card-listing-img-wrap">
-                <div class="listing-img-placeholder">
-                  <i class="bi bi-building"></i>
-                </div>
+                {% with photo_url=listing.photo|photo_url_or_none %}
+                  {% if photo_url %}
+                    <img src="{{ photo_url }}" class="listing-img" alt="{{ listing.title }}">
+                  {% else %}
+                    <div class="listing-img-placeholder">
+                      <i class="bi bi-building"></i>
+                    </div>
+                  {% endif %}
+                {% endwith %}
                 <div class="card-listing-badges">
                   {% if listing.type == "chambre" %}
                     <span class="badge-type badge-type-chambre">Room</span>
