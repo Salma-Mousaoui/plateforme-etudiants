@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Mon tableau de bord — Elan{% endblock %}
+{% block title %}My Dashboard — Elan{% endblock %}
 
 {% block content %}
 <div class="elan-container mt-4 mb-5">
@@ -14,12 +14,12 @@
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
       <div>
         <h1 class="fw-bold mb-1" style="font-family:var(--font-display)">
-          <i class="bi bi-hand-wave me-2"></i>Bonjour, {{ request.user.first_name }} !
+          <i class="bi bi-hand-wave me-2"></i>Hello, {{ request.user.first_name }}!
         </h1>
         <p class="mb-0 opacity-75">Welcome to your Elan student space</p>
       </div>
       <a href="{% url 'profil' %}" class="btn btn-light btn-sm fw-semibold" style="border-radius:8px">
-        <i class="bi bi-person-gear me-1"></i>Mon profil
+        <i class="bi bi-person-gear me-1"></i>My Profile
       </a>
     </div>
   </div>
@@ -237,7 +237,7 @@
       <div class="card border-0 shadow-sm" style="border-radius:16px">
         <div class="card-body p-4">
           <h5 class="fw-bold mb-3" style="font-family:var(--font-display);color:var(--elan-navy)">
-            <i class="bi bi-people me-2" style="color:var(--elan-blue)"></i>Mes groupes
+            <i class="bi bi-people me-2" style="color:var(--elan-blue)"></i>My Groups
           </h5>
           {% for group in user_groups %}
             <a href="{% url 'group-chat' group.pk %}"
