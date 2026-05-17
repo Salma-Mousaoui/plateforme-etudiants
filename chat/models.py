@@ -1,7 +1,7 @@
 """
 Models for the chat app.
 
-Role : Messagerie en temps réel (privée et groupes) via WebSocket.
+Role : Real-time messaging (private and groups) via WebSocket.
 """
 
 from django.db import models
@@ -9,7 +9,7 @@ from django.conf import settings
 
 
 class ChatGroup(models.Model):
-    """Groupe de discussion par ville ou thématique."""
+    """Discussion group by city or topic."""
 
     name = models.CharField(max_length=200)
     city = models.CharField(max_length=100, blank=True)
@@ -24,12 +24,12 @@ class ChatGroup(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = 'Groupe de discussion'
-        verbose_name_plural = 'Groupes de discussion'
+        verbose_name = 'Chat Group'
+        verbose_name_plural = 'Chat Groups'
 
 
 class Message(models.Model):
-    """Message envoyé dans un chat privé ou un groupe."""
+    """Message sent in a private chat or a group."""
 
     sender = models.ForeignKey(
         settings.AUTH_USER_MODEL,

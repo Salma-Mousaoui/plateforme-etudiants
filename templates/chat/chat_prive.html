@@ -264,7 +264,7 @@
 
     {% for conv in conversations %}
       {% with other=conv.other_user %}
-        <a href="/chat/prive/{{ other.id }}/"
+        <a href="{% url 'private-chat' other.id %}"
            class="conv-item {% if other.id == other_user.id %}active{% endif %}">
 
           {% if other.photo %}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Account Pending Validation — Elan{% endblock %}
+
+{% block content %}
+<div class="elan-container mt-5 mb-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+
+      <div class="card border-0 shadow-sm text-center p-5" style="border-radius:20px">
+
+        <!-- Clock icon -->
+        <div class="rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center"
+             style="width:88px;height:88px;background:#FEF3C7">
+          <i class="bi bi-clock-history" style="font-size:2.4rem;color:#D97706"></i>
+        </div>
+
+        <h2 class="fw-bold mb-2" style="font-family:var(--font-display);color:var(--elan-navy)">
+          Account Pending Validation
+        </h2>
+
+        <p class="text-muted mb-4" style="line-height:1.7">
+          Your account has been created. Our team is currently reviewing your application
+          and will notify you as soon as your account is validated.
+          <br>This process typically takes <strong>1 to 2 business days</strong>.
+        </p>
+
+        <!-- Info box -->
+        <div class="rounded-3 p-3 mb-4 text-start"
+             style="background:var(--elan-blue-light);border:1px solid #BFDBFE">
+          <p class="fw-semibold mb-2" style="color:var(--elan-navy)">
+            <i class="bi bi-info-circle me-2" style="color:var(--elan-blue)"></i>How does it work?
+          </p>
+          <ul class="text-muted small mb-0 ps-4" style="line-height:2">
+            <li>Your request is being reviewed by the Elan team</li>
+            <li>Once validated, you will be able to access your professional space</li>
+            <li>You will be visible in the professionals directory</li>
+          </ul>
+        </div>
+
+        <!-- Contact -->
+        <p class="text-muted small mb-4">
+          Have a question?
+          <a href="mailto:contact@elan-platform.com"
+             class="fw-semibold text-decoration-none" style="color:var(--elan-blue)">
+            contact@elan-platform.com
+          </a>
+        </p>
+
+        <div class="d-flex gap-2 justify-content-center flex-wrap">
+          <a href="{% url 'landing' %}" class="btn btn-primary fw-semibold px-4" style="border-radius:8px">
+            <i class="bi bi-house me-1"></i>Back to Home
+          </a>
+          <a href="{% url 'profil' %}" class="btn btn-outline-secondary px-4" style="border-radius:8px">
+            <i class="bi bi-person-gear me-1"></i>My Profile
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
