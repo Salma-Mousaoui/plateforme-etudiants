@@ -110,7 +110,15 @@
         <!-- Profile photo -->
         <div class="mb-3">
           <label class="form-label fw-semibold">Profile photo</label>
-          <input type="file" name="photo" accept="image/*" class="form-control">
+          <div class="input-group">
+            <label class="btn btn-outline-secondary mb-0 d-flex align-items-center gap-1"
+                   style="cursor:pointer; white-space:nowrap; border-radius:6px 0 0 6px;">
+              <i class="bi bi-upload"></i> Choose file
+              <input type="file" name="photo" accept="image/*" id="photoInput" class="d-none">
+            </label>
+            <span class="form-control text-muted" id="photoLabel"
+                  style="border-radius:0 6px 6px 0; border-left:0;">No file chosen</span>
+          </div>
           {% if user.photo %}
             <div class="form-text">
               <i class="bi bi-check-circle text-success me-1"></i>A photo is already set.
@@ -170,4 +178,13 @@
   </div>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.getElementById('photoInput').addEventListener('change', function () {
+    document.getElementById('photoLabel').textContent =
+      this.files.length ? this.files[0].name : 'No file chosen';
+  });
+</script>
 {% endblock %}
