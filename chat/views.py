@@ -39,10 +39,21 @@ def get_conversations(user):
     return conversations
 
 
+def get_groups_context(user):
+    """Return groups data for the sidebar: all groups + set of group IDs the user belongs to."""
+    return {
+        "available_groups": ChatGroup.objects.all().order_by("city", "name"),
+        "my_group_ids": set(
+            ChatGroup.objects.filter(members=user).values_list("id", flat=True)
+        ),
+    }
+
+
 @login_required
 def ChatListView(request):
-    conversations = get_conversations(request.user)
-    return render(request, "chat/liste_chats.html", {"conversations": conversations})
+    ctx = {"conversations": get_conversations(request.user)}
+    ctx.update(get_groups_context(request.user))
+    return render(request, "chat/liste_chats.html", ctx)
 
 
 @login_required
@@ -76,11 +87,13 @@ def PrivateChatView(request, other_user_id):
         ).order_by("sent_at")
     )[-50:]
 
-    return render(request, "chat/chat_prive.html", {
+    ctx = {
         "other_user": other_user,
         "messages_historique": messages_historique,
         "conversations": get_conversations(user),
-    })
+    }
+    ctx.update(get_groups_context(user))
+    return render(request, "chat/chat_prive.html", ctx)
 
 
 @login_required
@@ -90,9 +103,14 @@ def GroupChatView(request, group_id):
     if not group.members.filter(pk=user.pk).exists():
         group.members.add(user)
     messages_list = list(
-        Message.objects.filter(group=group).order_by("sent_at")
+        Message.objects.filter(group=group)
+        .select_related("sender")
+        .order_by("sent_at")
     )[-50:]
-    return render(request, "chat/chat_groupe.html", {
+    ctx = {
         "group": group,
         "messages": messages_list,
-    })
+        "conversations": get_conversations(user),
+    }
+    ctx.update(get_groups_context(user))
+    return render(request, "chat/chat_groupe.html", ctx)
