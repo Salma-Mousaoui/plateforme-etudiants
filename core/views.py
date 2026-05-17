@@ -59,28 +59,28 @@ class LandingView(TemplateView):
                 "title":       "Housing",
                 "anchor":      "housing",
                 "description": "Find verified rooms and apartments in Spain",
-                "url":         "/housing/",
+                "url_name":    "listings",
             },
             {
                 "icon":        "journal-text",
                 "title":       "Counselors",
                 "anchor":      "counselors",
                 "description": "University and academic degree advice",
-                "url":         "/orienteurs/",
+                "url_name":    "counselors",
             },
             {
                 "icon":        "briefcase",
                 "title":       "Lawyers",
                 "anchor":      "lawyers",
                 "description": "Immigration lawyers, certified and verified",
-                "url":         "/avocats/",
+                "url_name":    "lawyers",
             },
             {
                 "icon":        "chat-dots",
                 "title":       "Community",
                 "anchor":      "community",
                 "description": "Chat with Moroccan students across Spain",
-                "url":         "/chat/",
+                "url_name":    "chat-list",
             },
         ]
         return context

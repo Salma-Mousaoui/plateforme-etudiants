@@ -89,6 +89,17 @@
   }
   .conv-time { font-size: 11px; color: #9ca3af; }
 
+  /* ── Sidebar section label ───────────────────── */
+  .sidebar-label {
+    padding: 10px 16px 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    flex-shrink: 0;
+  }
+
   /* ── Role badges ──────────────────────────────── */
   .role-badge {
     display: inline-block;
@@ -260,8 +271,10 @@
 
   <!-- LEFT: conversation list -->
   <div class="chat-sidebar">
-    <div class="sidebar-title">My conversations</div>
+    <div class="sidebar-title">Messages</div>
 
+    <!-- Private conversations -->
+    <div class="sidebar-label">My conversations</div>
     {% for conv in conversations %}
       {% with other=conv.other_user %}
         <a href="{% url 'private-chat' other.id %}"
@@ -307,7 +320,26 @@
         </a>
       {% endwith %}
     {% empty %}
-      <p class="text-muted p-3 small">No conversations yet.</p>
+      <p class="text-muted px-3 py-2 small">No conversations yet.</p>
+    {% endfor %}
+
+    <!-- Community groups -->
+    <div class="sidebar-label">Community</div>
+    {% for grp in available_groups %}
+      <a href="{% url 'group-chat' grp.id %}" class="conv-item">
+        <div class="avatar-circle" style="background:#dbeafe;">
+          <i class="bi bi-people-fill" style="color:#1E3A5F;font-size:16px;"></i>
+        </div>
+        <div class="conv-info">
+          <div class="conv-name">{{ grp.name }}</div>
+          <div class="conv-preview">
+            {% if grp.city %}<i class="bi bi-geo-alt"></i> {{ grp.city }}{% endif %}
+            {% if grp.id in my_group_ids %} · <span style="color:#2563eb;">Member</span>{% elif not grp.city %}Tap to join{% endif %}
+          </div>
+        </div>
+      </a>
+    {% empty %}
+      <p class="text-muted px-3 py-2 small">No community groups yet.</p>
     {% endfor %}
   </div>
 
@@ -536,8 +568,8 @@
     }
 
     chatSocket.send(JSON.stringify({ message: msg, sender_id: ME }));
-    appendMessage(msg, ME, now(), false, null);
-    scrollToBottom();
+    // OPTION A : le consumer rebroadcast à tous les membres y compris l'expéditeur.
+    // L'affichage est géré uniquement par onmessage pour éviter le double affichage.
     input.value = "";
   }
 

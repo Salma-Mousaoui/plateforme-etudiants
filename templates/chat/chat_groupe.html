@@ -13,46 +13,81 @@
     overflow: hidden;
   }
 
-  /* ── Left column: group info + members ──────── */
+  /* ── Left sidebar: unified navigation ──────────── */
   .chat-sidebar {
     width: 280px;
     min-width: 280px;
     border-right: 1px solid #e5e7eb;
+    overflow-y: auto;
+    overflow-x: hidden;
     background: #fff;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
   }
-  .sidebar-group-header {
+  .sidebar-title {
     padding: 16px;
+    font-weight: 700;
+    font-size: 15px;
     border-bottom: 1px solid #e5e7eb;
     flex-shrink: 0;
   }
-  .member-row {
+  .sidebar-label {
+    padding: 10px 16px 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    flex-shrink: 0;
+  }
+  .conv-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 6px 16px;
+    gap: 12px;
+    padding: 10px 16px;
+    text-decoration: none;
+    color: inherit;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background 0.15s;
   }
-  .member-avatar {
-    width: 36px;
-    height: 36px;
+  .conv-item:hover  { background: #f3f4f6; color: inherit; }
+  .conv-item.active { background: #eff6ff; color: inherit; }
+  .avatar-circle {
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    background: #e5e7eb;
-    color: #374151;
-    font-size: 13px;
+    background: #1E3A5F;
+    color: #fff;
     font-weight: 700;
+    font-size: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
   }
-  .member-img {
-    width: 36px;
-    height: 36px;
+  .avatar-img {
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
+  }
+  .conv-info { flex: 1; min-width: 0; }
+  .conv-name {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #111827;
+  }
+  .conv-preview {
+    font-size: 12px;
+    color: #6b7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
   }
 
   /* ── Right column ────────────────────────────── */
@@ -86,7 +121,7 @@
     flex-shrink: 0;
   }
 
-  /* Messages */
+  /* ── Messages area ───────────────────────────── */
   .messages-area {
     flex: 1;
     overflow-y: auto;
@@ -101,9 +136,12 @@
     gap: 8px;
   }
   .bubble-wrapper.mine { flex-direction: row-reverse; }
+  /* Give every content wrapper a definite max-width so .bubble's word-wrap
+     has a real anchor. Applies to both mine and theirs inner divs; excluded
+     from .bubble-avatar which is already fixed at 30 px. */
+  .bubble-wrapper > div:not(.bubble-avatar) { max-width: 65%; }
 
   .bubble {
-    max-width: 65%;
     padding: 10px 14px;
     font-size: 14px;
     line-height: 1.5;
@@ -132,13 +170,12 @@
     margin-top: 3px;
   }
   .bubble-meta.mine { text-align: right; }
-
   .bubble-avatar {
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    background: #1E3A5F;
-    color: #fff;
+    background: #e5e7eb;
+    color: #374151;
     font-size: 11px;
     font-weight: 700;
     display: flex;
@@ -147,7 +184,7 @@
     flex-shrink: 0;
   }
 
-  /* Input bar */
+  /* ── Input bar ───────────────────────────────── */
   .chat-input-bar {
     padding: 12px 16px;
     background: #fff;
@@ -191,35 +228,56 @@
 {% block content %}
 <div class="chat-layout">
 
-  <!-- LEFT: group info + member list (280 px) -->
+  <!-- LEFT: unified navigation sidebar -->
   <div class="chat-sidebar">
-    <div class="sidebar-group-header">
-      <div class="fw-bold" style="font-size:15px;">{{ group.name }}</div>
-      {% if group.city %}
-        <small class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ group.city }}</small>
-      {% endif %}
-    </div>
+    <div class="sidebar-title">Messages</div>
 
-    <div class="p-3">
-      <p class="text-muted small fw-semibold mb-2" style="letter-spacing:.05em;">
-        MEMBERS ({{ group.members.count }})
-      </p>
-      {% for member in group.members.all %}
-        <div class="member-row">
-          {% if member.photo %}
-            <img src="{{ member.photo.url }}" alt="{{ member.get_full_name }}" class="member-img">
+    <!-- Private conversations -->
+    <div class="sidebar-label">My conversations</div>
+    {% for conv in conversations %}
+      {% with other=conv.other_user %}
+        <a href="{% url 'private-chat' other.id %}" class="conv-item">
+          {% if other.photo %}
+            <img src="{{ other.photo.url }}" alt="{{ other.get_full_name }}" class="avatar-img">
           {% else %}
-            <div class="member-avatar">
-              {% if member.first_name %}{{ member.first_name|slice:"0:1"|upper }}{{ member.last_name|slice:"0:1"|upper }}{% else %}{{ member.username|slice:"0:1"|upper }}{% endif %}
+            <div class="avatar-circle">
+              {% if other.first_name %}{{ other.first_name|slice:"0:1"|upper }}{{ other.last_name|slice:"0:1"|upper }}{% else %}{{ other.username|slice:"0:1"|upper }}{% endif %}
             </div>
           {% endif %}
-          <span class="small flex-grow-1">{{ member.get_full_name|default:member.username }}</span>
-          {% if member == request.user %}
-            <span class="badge bg-light text-secondary" style="font-size:10px;">Me</span>
+          <div class="conv-info">
+            <div class="conv-name {% if conv.unread_count %}fw-bold{% endif %}">
+              {{ other.get_full_name|default:other.username }}
+            </div>
+            <div class="conv-preview">{{ conv.last_message|truncatechars:30 }}</div>
+          </div>
+          {% if conv.unread_count %}
+            <span class="badge rounded-pill bg-danger" style="font-size:10px;">{{ conv.unread_count }}</span>
           {% endif %}
+        </a>
+      {% endwith %}
+    {% empty %}
+      <p class="text-muted px-3 py-2 small">No conversations yet.</p>
+    {% endfor %}
+
+    <!-- Community groups -->
+    <div class="sidebar-label">Community</div>
+    {% for grp in available_groups %}
+      <a href="{% url 'group-chat' grp.id %}"
+         class="conv-item {% if grp.id == group.id %}active{% endif %}">
+        <div class="avatar-circle" style="background:#dbeafe;">
+          <i class="bi bi-people-fill" style="color:#1E3A5F;font-size:16px;"></i>
         </div>
-      {% endfor %}
-    </div>
+        <div class="conv-info">
+          <div class="conv-name">{{ grp.name }}</div>
+          <div class="conv-preview">
+            {% if grp.city %}<i class="bi bi-geo-alt"></i> {{ grp.city }}{% endif %}
+            {% if grp.id in my_group_ids %} · <span style="color:#2563eb;">Member</span>{% elif not grp.city %}Tap to join{% endif %}
+          </div>
+        </div>
+      </a>
+    {% empty %}
+      <p class="text-muted px-3 py-2 small">No community groups yet.</p>
+    {% endfor %}
   </div>
 
   <!-- RIGHT: header + messages + send bar -->
@@ -229,7 +287,9 @@
       <div class="group-avatar">{{ group.name|slice:"0:1"|upper }}</div>
       <div>
         <div class="fw-semibold" style="font-size:15px;">{{ group.name }}</div>
-        {% if group.city %}<small class="text-muted">{{ group.city }}</small>{% endif %}
+        <small class="text-muted">
+          {% if group.city %}{{ group.city }} · {% endif %}{{ group.members.count }} member{{ group.members.count|pluralize }}
+        </small>
       </div>
     </div>
 
@@ -279,7 +339,7 @@
   const msgInput     = document.getElementById("msg-input");
   const btnSend      = document.getElementById("btn-send");
 
-  // Current user identifier used to distinguish own messages from the WS echo
+  // Full name used to filter out WS echo of own messages
   const ME = "{{ request.user.get_full_name|default:request.user.username|escapejs }}";
 
   messagesArea.scrollTop = messagesArea.scrollHeight;
@@ -289,9 +349,11 @@
 
   ws.onmessage = function (e) {
     const data = JSON.parse(e.data);
-    // The consumer echoes to all members including sender — skip own echo
-    if (data.sender !== ME) {
-      appendBubble(data.message, data.sender, false);
+    // History already rendered by Django on page load — skip
+    if (data.type === "history_item") return;
+    // Consumer broadcasts to everyone including sender; filter own echo
+    if (data.sender_name !== ME) {
+      appendBubble(data.message, data.sender_name, false);
     }
   };
 
@@ -303,7 +365,7 @@
     const content = msgInput.value.trim();
     if (!content || ws.readyState !== WebSocket.OPEN) return;
     ws.send(JSON.stringify({ message: content, sender: ME }));
-    appendBubble(content, null, true);   // render immediately for sender
+    appendBubble(content, null, true);
     msgInput.value = "";
     msgInput.style.height = "auto";
   }
