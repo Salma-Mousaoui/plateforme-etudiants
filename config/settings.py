@@ -17,9 +17,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY')
 
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = config(
+    'ALLOWED_HOSTS',
+    default='localhost,127.0.0.1',
+    cast=lambda v: [s.strip() for s in v.split(',')],
+)
+
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='',
+    cast=lambda v: [s.strip() for s in v.split(',') if s.strip()],
+)
 
 # ==============================================================================
 # APPLICATION DEFINITION
@@ -129,6 +139,15 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
 # ==============================================================================
 # MEDIA FILES (Uploads)
 # ==============================================================================
@@ -138,13 +157,14 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # ==============================================================================
 # DJANGO CHANNELS
-# InMemoryChannelLayer for development (single process, no Redis required).
-# Switch to RedisChannelLayer before deploying to production.
 # ==============================================================================
 
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [config('REDIS_URL', default='redis://localhost:6379')],
+        },
     },
 }
 
@@ -181,7 +201,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 USE_SUPABASE_STORAGE = config('USE_SUPABASE_STORAGE', default=False, cast=bool)
 
 if USE_SUPABASE_STORAGE:
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    STORAGES["default"]["BACKEND"] = 'storages.backends.s3boto3.S3Boto3Storage'
     AWS_S3_ENDPOINT_URL = config('SUPABASE_S3_ENDPOINT')
     AWS_ACCESS_KEY_ID = config('SUPABASE_ACCESS_KEY')
     AWS_SECRET_ACCESS_KEY = config('SUPABASE_SECRET_KEY')
@@ -192,7 +212,3 @@ if USE_SUPABASE_STORAGE:
     AWS_QUERYSTRING_AUTH = False
     SUPABASE_URL = config('SUPABASE_URL')
     MEDIA_URL = f"{SUPABASE_URL}/storage/v1/object/public/"
-else:
-    if not globals().get('MEDIA_URL'):
-        MEDIA_URL = '/media/'
-        MEDIA_ROOT = BASE_DIR / 'media'
