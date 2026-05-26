@@ -47,15 +47,19 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
         except (json.JSONDecodeError, ValueError):
             return
 
+        content = data.get("message", "").strip()
+        if not content:
+            return
+
         user = self.scope["user"]
 
-        msg = await self.save_message(user, self.other_user_id, data.get("message", ""))
+        msg = await self.save_message(user, self.other_user_id, content)
         if msg is None:
             return
 
         await self.channel_layer.group_send(self.room_name, {
             "type": "chat_message",
-            "message": data["message"],
+            "message": content,
             "sender_id": user.id,
             "sender_name": user.get_full_name() or user.username,
             "sent_at": datetime.now().strftime("%H:%M"),
@@ -136,15 +140,19 @@ class GroupChatConsumer(AsyncWebsocketConsumer):
         except (json.JSONDecodeError, ValueError):
             return
 
+        content = data.get("message", "").strip()
+        if not content:
+            return
+
         user = self.scope["user"]
 
-        msg = await self.save_group_message(user, self.group_id, data.get("message", ""))
+        msg = await self.save_group_message(user, self.group_id, content)
         if msg is None:
             return
 
         await self.channel_layer.group_send(self.room_name, {
             "type": "chat_message",
-            "message": data["message"],
+            "message": content,
             "sender_id": user.id,
             "sender_name": user.get_full_name() or user.username,
             "sent_at": datetime.now().strftime("%H:%M"),
