@@ -345,21 +345,34 @@
   messagesArea.scrollTop = messagesArea.scrollHeight;
 
   const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
-  const ws = new WebSocket(`${wsScheme}://${window.location.host}/ws/chat/groupe/{{ group.id }}/`);
+  const wsUrl = `${wsScheme}://${window.location.host}/ws/chat/groupe/{{ group.id }}/`;
 
-  ws.onmessage = function (e) {
-    const data = JSON.parse(e.data);
-    // History already rendered by Django on page load — skip
-    if (data.type === "history_item") return;
-    // Consumer broadcasts to everyone including sender; filter own echo
-    if (data.sender_name !== ME) {
-      appendBubble(data.message, data.sender_name, false);
-    }
-  };
+  let ws;
 
-  ws.onclose = function () {
-    console.warn("WebSocket group chat closed.");
-  };
+  function connect() {
+    ws = new WebSocket(wsUrl);
+
+    ws.onmessage = function (e) {
+      const data = JSON.parse(e.data);
+      // History already rendered by Django on page load — skip
+      if (data.type === "history_item") return;
+      // Consumer broadcasts to everyone including sender; filter own echo
+      if (data.sender_name !== ME) {
+        appendBubble(data.message, data.sender_name, false);
+      }
+    };
+
+    ws.onerror = function (err) {
+      console.error("WebSocket group chat error:", err);
+    };
+
+    ws.onclose = function () {
+      console.warn("WebSocket group chat closed, reconnecting in 3s…");
+      setTimeout(connect, 3000);
+    };
+  }
+
+  connect();
 
   function sendMessage() {
     const content = msgInput.value.trim();

@@ -166,11 +166,20 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # DJANGO CHANNELS
 # ==============================================================================
 
+_redis_url = config('REDIS_URL', default='redis://localhost:6379')
+# Railway sometimes provides rediss:// (SSL). channels_redis needs ssl_cert_reqs=None
+# to connect without verifying the self-signed cert.
+_redis_host = (
+    {"address": _redis_url, "ssl_cert_reqs": None}
+    if _redis_url.startswith("rediss://")
+    else _redis_url
+)
+
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [config('REDIS_URL', default='redis://localhost:6379')],
+            'hosts': [_redis_host],
         },
     },
 }
