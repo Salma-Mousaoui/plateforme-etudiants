@@ -31,6 +31,13 @@ CSRF_TRUSTED_ORIGINS = config(
     cast=lambda v: [s.strip() for s in v.split(',') if s.strip()],
 )
 
+# Railway reverse-proxy : indique à Django que le trafic entrant est HTTPS
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Cookies sécurisés uniquement en production (HTTPS)
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
 # ==============================================================================
 # APPLICATION DEFINITION
 # ==============================================================================
