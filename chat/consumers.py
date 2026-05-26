@@ -24,26 +24,32 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
         u2 = max(user.id, self.other_user_id)
         self.room_name = f"chat_{u1}_{u2}"
 
-        await self.channel_layer.group_add(self.room_name, self.channel_name)
-        await self.accept()
-
-        # Send last 50 messages history directly to this connection only
-        history = await self.get_history(user.id, self.other_user_id)
-        for msg in history:
-            await self.send(text_data=json.dumps(msg))
-
-        # Mark messages from the other user as read
-        await self.mark_messages_read(user, self.other_user_id)
+        try:
+            await self.channel_layer.group_add(self.room_name, self.channel_name)
+            await self.accept()
+            history = await self.get_history(user.id, self.other_user_id)
+            for msg in history:
+                await self.send(text_data=json.dumps(msg))
+            await self.mark_messages_read(user, self.other_user_id)
+        except Exception:
+            await self.close()
 
     async def disconnect(self, close_code):
         if hasattr(self, "room_name"):
-            await self.channel_layer.group_discard(self.room_name, self.channel_name)
+            try:
+                await self.channel_layer.group_discard(self.room_name, self.channel_name)
+            except Exception:
+                pass
 
     async def receive(self, text_data):
-        data = json.loads(text_data)
+        try:
+            data = json.loads(text_data)
+        except (json.JSONDecodeError, ValueError):
+            return
+
         user = self.scope["user"]
 
-        msg = await self.save_message(user, self.other_user_id, data["message"])
+        msg = await self.save_message(user, self.other_user_id, data.get("message", ""))
         if msg is None:
             return
 
@@ -107,26 +113,32 @@ class GroupChatConsumer(AsyncWebsocketConsumer):
         self.group_id = int(self.scope["url_route"]["kwargs"]["group_id"])
         self.room_name = f"groupe_{self.group_id}"
 
-        await self.channel_layer.group_add(self.room_name, self.channel_name)
-        await self.accept()
-
-        # Add user to group members if not already a member
-        await self.ensure_member(user, self.group_id)
-
-        # Send last 50 messages history directly to this connection
-        history = await self.get_history(self.group_id)
-        for msg in history:
-            await self.send(text_data=json.dumps(msg))
+        try:
+            await self.channel_layer.group_add(self.room_name, self.channel_name)
+            await self.accept()
+            await self.ensure_member(user, self.group_id)
+            history = await self.get_history(self.group_id)
+            for msg in history:
+                await self.send(text_data=json.dumps(msg))
+        except Exception:
+            await self.close()
 
     async def disconnect(self, close_code):
         if hasattr(self, "room_name"):
-            await self.channel_layer.group_discard(self.room_name, self.channel_name)
+            try:
+                await self.channel_layer.group_discard(self.room_name, self.channel_name)
+            except Exception:
+                pass
 
     async def receive(self, text_data):
-        data = json.loads(text_data)
+        try:
+            data = json.loads(text_data)
+        except (json.JSONDecodeError, ValueError):
+            return
+
         user = self.scope["user"]
 
-        msg = await self.save_group_message(user, self.group_id, data["message"])
+        msg = await self.save_group_message(user, self.group_id, data.get("message", ""))
         if msg is None:
             return
 
