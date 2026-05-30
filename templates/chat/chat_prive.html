@@ -490,13 +490,19 @@
   let chatSocket;
   let fileSelected = false;
 
-  // ── WebSocket ──────────────────────────────────────────────────────────────
+  // ── WebSocket (exponential backoff reconnect + keepalive) ─────────────────
 
-  function connect() {
+  let reconnectDelay = 3000;
+  const MAX_RECONNECT_DELAY = 30000;
+
+  function connectWebSocket() {
     chatSocket = new WebSocket(wsUrl);
 
     chatSocket.onopen = function () {
+      reconnectDelay = 3000;
       document.getElementById("ws-status").style.display = "none";
+      document.getElementById("message-input").disabled = false;
+      document.getElementById("send-btn").disabled = false;
     };
 
     chatSocket.onmessage = function (e) {
@@ -525,17 +531,28 @@
       scrollToBottom();
     };
 
-    chatSocket.onerror = function (err) {
-      console.error("WebSocket error:", err);
+    chatSocket.onerror = function () {
+      chatSocket.close();
     };
 
     chatSocket.onclose = function () {
       document.getElementById("ws-status").style.display = "block";
-      setTimeout(connect, 3000);
+      document.getElementById("message-input").disabled = true;
+      setTimeout(connectWebSocket, reconnectDelay);
+      reconnectDelay = Math.min(reconnectDelay * 1.5, MAX_RECONNECT_DELAY);
     };
   }
 
-  connect();
+  connectWebSocket();
+
+  // ── Keepalive ping ─────────────────────────────────────────────────────────
+  // Railway drops idle WebSocket connections after ~55 s. A lightweight ping
+  // every 30 s keeps the connection open without sending chat traffic.
+  setInterval(function () {
+    if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+      chatSocket.send(JSON.stringify({ type: "ping" }));
+    }
+  }, 30000);
 
   // ── File attachment ────────────────────────────────────────────────────────
 
@@ -588,7 +605,7 @@
     if (!msg) return;
 
     if (chatSocket.readyState !== WebSocket.OPEN) {
-      alert("Connection lost, please wait…");
+      document.getElementById("ws-status").style.display = "block";
       return;
     }
 

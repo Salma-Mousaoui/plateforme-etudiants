@@ -61,6 +61,10 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
             return
 
         msg_type = data.get("type", "text")
+
+        if msg_type == "ping":
+            return
+
         user = self.scope["user"]
 
         if msg_type == "image_url":
@@ -173,6 +177,9 @@ class GroupChatConsumer(AsyncWebsocketConsumer):
         try:
             data = json.loads(text_data)
         except (json.JSONDecodeError, ValueError):
+            return
+
+        if data.get("type") == "ping":
             return
 
         content = data.get("message", "").strip()
