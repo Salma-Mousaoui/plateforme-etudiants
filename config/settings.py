@@ -3,7 +3,6 @@ Django settings for plateforme_etudiants project.
 Python 3.11, Django 6.x, PostgreSQL (Supabase), Redis, Django Channels 4.x
 """
 
-import os
 from pathlib import Path
 from decouple import config
 import dj_database_url
@@ -49,11 +48,14 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    # cloudinary_storage must come before staticfiles so its finders are
+    # registered; we only use it for media, but the docs require this order.
+    'cloudinary_storage',
     'django.contrib.staticfiles',
 
     # Third-party
     'channels',
-    'storages',
+    'cloudinary',
 
     # Local apps
     'core',
@@ -148,7 +150,10 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        # Cloudinary handles all user-uploaded files (profiles, listings,
+        # chat attachments). Railway's filesystem is ephemeral, so we must
+        # never store uploads on disk in production.
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
@@ -156,11 +161,24 @@ STORAGES = {
 }
 
 # ==============================================================================
-# MEDIA FILES (Uploads)
+# MEDIA FILES (Uploads) — served via Cloudinary in all environments
 # ==============================================================================
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# ==============================================================================
+# CLOUDINARY  (media storage for user-uploaded files)
+# Free tier at cloudinary.com — no credit card required.
+# Required Railway env vars: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY,
+#                             CLOUDINARY_API_SECRET
+# ==============================================================================
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME', default=''),
+    'API_KEY':    config('CLOUDINARY_API_KEY',    default=''),
+    'API_SECRET': config('CLOUDINARY_API_SECRET', default=''),
+}
 
 # ==============================================================================
 # DJANGO CHANNELS
@@ -209,22 +227,3 @@ MESSAGE_TAGS = {message_constants.ERROR: 'danger'}
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ==============================================================================
-# SUPABASE STORAGE (django-storages + boto3 S3 backend)
-# Set USE_SUPABASE_STORAGE=True in .env to enable cloud storage.
-# ==============================================================================
-
-USE_SUPABASE_STORAGE = config('USE_SUPABASE_STORAGE', default=False, cast=bool)
-
-if USE_SUPABASE_STORAGE:
-    STORAGES["default"]["BACKEND"] = 'storages.backends.s3boto3.S3Boto3Storage'
-    AWS_S3_ENDPOINT_URL = config('SUPABASE_S3_ENDPOINT')
-    AWS_ACCESS_KEY_ID = config('SUPABASE_ACCESS_KEY')
-    AWS_SECRET_ACCESS_KEY = config('SUPABASE_SECRET_KEY')
-    AWS_STORAGE_BUCKET_NAME = 'profiles'
-    AWS_S3_REGION_NAME = config('SUPABASE_REGION', default='eu-west-1')
-    AWS_S3_FILE_OVERWRITE = False
-    AWS_DEFAULT_ACL = 'public-read'
-    AWS_QUERYSTRING_AUTH = False
-    SUPABASE_URL = config('SUPABASE_URL')
-    MEDIA_URL = f"{SUPABASE_URL}/storage/v1/object/public/"
