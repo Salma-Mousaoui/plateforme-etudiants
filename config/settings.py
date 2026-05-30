@@ -146,50 +146,71 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-STORAGES = {
-    "default": {
-        # Production: Supabase S3-compatible storage (USE_SUPABASE_STORAGE=True)
-        # Development: local filesystem (USE_SUPABASE_STORAGE=False or unset)
-        "BACKEND": (
-            'storages.backends.s3boto3.S3Boto3Storage'
-            if config('USE_SUPABASE_STORAGE', default=False, cast=bool)
-            else 'django.core.files.storage.FileSystemStorage'
-        ),
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
-
 # ==============================================================================
 # MEDIA FILES + SUPABASE STORAGE (S3-compatible)
 # Dev  (USE_SUPABASE_STORAGE=False): FileSystemStorage → local MEDIA_ROOT
-# Prod (USE_SUPABASE_STORAGE=True):  S3Boto3Storage    → Supabase bucket
+# Prod (USE_SUPABASE_STORAGE=True):  per-bucket S3Boto3Storage backends
+#   Buckets (already exist in Supabase, both PUBLIC):
+#     'listings'  ← housing listing photos     (core.storage_backends.ListingsStorage)
+#     'profiles'  ← user profile pictures      (core.storage_backends.ProfilesStorage)
+#     'chat'      ← chat image attachments     (core.storage_backends.ChatStorage)
 # ==============================================================================
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Extract the Supabase project ref (e.g. 'rnklndklkxjfltlqsijg') from the
+# full URL so the storage backends can build their public custom_domain values.
+SUPABASE_URL = config('SUPABASE_URL', default='')
+SUPABASE_PROJECT_REF = SUPABASE_URL.replace('https://', '').replace('.supabase.co', '')
 
 USE_SUPABASE_STORAGE = config('USE_SUPABASE_STORAGE', default=False, cast=bool)
 
 if USE_SUPABASE_STORAGE:
-    AWS_ACCESS_KEY_ID       = config('SUPABASE_ACCESS_KEY')
-    AWS_SECRET_ACCESS_KEY   = config('SUPABASE_SERVICE_KEY')
-    AWS_STORAGE_BUCKET_NAME = config('SUPABASE_BUCKET_NAME', default='media')
-    AWS_S3_ENDPOINT_URL     = config('SUPABASE_S3_ENDPOINT')
-    AWS_S3_REGION_NAME      = config('SUPABASE_REGION', default='eu-central-1')
-    AWS_S3_FILE_OVERWRITE   = False
-    AWS_DEFAULT_ACL         = 'public-read'
-    AWS_QUERYSTRING_AUTH    = False
-    MEDIA_URL = (
-        f"{config('SUPABASE_URL')}/storage/v1/object/public/"
-        f"{config('SUPABASE_BUCKET_NAME', default='media')}/"
-    )
+    # Shared S3 connection settings consumed by every storage backend.
+    AWS_ACCESS_KEY_ID     = config('SUPABASE_ACCESS_KEY')
+    AWS_SECRET_ACCESS_KEY = config('SUPABASE_SERVICE_KEY')
+    AWS_S3_ENDPOINT_URL   = config('SUPABASE_S3_ENDPOINT')
+    AWS_S3_REGION_NAME    = config('SUPABASE_REGION', default='eu-central-1')
+    AWS_QUERYSTRING_AUTH  = False  # never sign URLs — all buckets are public
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL       = 'public-read'
+
+    # Default storage fallback (points to the 'listings' bucket).
+    # All model fields override this with their own per-bucket backend.
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
+            'OPTIONS': {
+                'bucket_name': 'listings',
+                'querystring_auth': False,
+                'file_overwrite': False,
+                'custom_domain': (
+                    f"{SUPABASE_PROJECT_REF}"
+                    f".supabase.co/storage/v1/object/public/listings"
+                ),
+            },
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
+
 elif not DEBUG:
     raise ImproperlyConfigured(
         "USE_SUPABASE_STORAGE is not set to True in production. "
         "Set USE_SUPABASE_STORAGE=True in Railway → Variables."
     )
+
+else:
+    # Local development: serve media from the filesystem.
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 # ==============================================================================
 # DJANGO CHANNELS
