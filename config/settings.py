@@ -220,6 +220,11 @@ CHANNEL_LAYERS = {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
             'hosts': [_redis_host],
+            # capacity: max messages queued per channel before back-pressure kicks in.
+            # expiry: seconds before an unread message is dropped from the queue.
+            # Both prevent Redis memory from growing unbounded if a consumer is slow.
+            'capacity': 1500,
+            'expiry': 10,
         },
     },
 }
