@@ -9,5 +9,5 @@ pillow
 whitenoise>=6.0
 dj-database-url
 faker
-cloudinary>=1.36.0
-django-cloudinary-storage>=0.3.0
+django-storages[s3]>=1.14
+boto3>=1.34

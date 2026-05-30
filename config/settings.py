@@ -6,6 +6,7 @@ Python 3.11, Django 6.x, PostgreSQL (Supabase), Redis, Django Channels 4.x
 from pathlib import Path
 from decouple import config
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -48,14 +49,11 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    # cloudinary_storage must come before staticfiles so its finders are
-    # registered; we only use it for media, but the docs require this order.
-    'cloudinary_storage',
     'django.contrib.staticfiles',
 
     # Third-party
     'channels',
-    'cloudinary',
+    'storages',
 
     # Local apps
     'core',
@@ -150,10 +148,13 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STORAGES = {
     "default": {
-        # Cloudinary handles all user-uploaded files (profiles, listings,
-        # chat attachments). Railway's filesystem is ephemeral, so we must
-        # never store uploads on disk in production.
-        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        # Production: Supabase S3-compatible storage (USE_SUPABASE_STORAGE=True)
+        # Development: local filesystem (USE_SUPABASE_STORAGE=False or unset)
+        "BACKEND": (
+            'storages.backends.s3boto3.S3Boto3Storage'
+            if config('USE_SUPABASE_STORAGE', default=False, cast=bool)
+            else 'django.core.files.storage.FileSystemStorage'
+        ),
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
@@ -161,32 +162,53 @@ STORAGES = {
 }
 
 # ==============================================================================
-# MEDIA FILES (Uploads) — served via Cloudinary in all environments
+# MEDIA FILES + SUPABASE STORAGE (S3-compatible)
+# Dev  (USE_SUPABASE_STORAGE=False): FileSystemStorage → local MEDIA_ROOT
+# Prod (USE_SUPABASE_STORAGE=True):  S3Boto3Storage    → Supabase bucket
 # ==============================================================================
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# ==============================================================================
-# CLOUDINARY  (media storage for user-uploaded files)
-# Free tier at cloudinary.com — no credit card required.
-# Required Railway env vars: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY,
-#                             CLOUDINARY_API_SECRET
-# ==============================================================================
+USE_SUPABASE_STORAGE = config('USE_SUPABASE_STORAGE', default=False, cast=bool)
 
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME', default=''),
-    'API_KEY':    config('CLOUDINARY_API_KEY',    default=''),
-    'API_SECRET': config('CLOUDINARY_API_SECRET', default=''),
-}
+if USE_SUPABASE_STORAGE:
+    AWS_ACCESS_KEY_ID       = config('SUPABASE_ACCESS_KEY')
+    AWS_SECRET_ACCESS_KEY   = config('SUPABASE_SERVICE_KEY')
+    AWS_STORAGE_BUCKET_NAME = config('SUPABASE_BUCKET_NAME', default='media')
+    AWS_S3_ENDPOINT_URL     = config('SUPABASE_S3_ENDPOINT')
+    AWS_S3_REGION_NAME      = config('SUPABASE_REGION', default='eu-central-1')
+    AWS_S3_FILE_OVERWRITE   = False
+    AWS_DEFAULT_ACL         = 'public-read'
+    AWS_QUERYSTRING_AUTH    = False
+    MEDIA_URL = (
+        f"{config('SUPABASE_URL')}/storage/v1/object/public/"
+        f"{config('SUPABASE_BUCKET_NAME', default='media')}/"
+    )
+elif not DEBUG:
+    raise ImproperlyConfigured(
+        "USE_SUPABASE_STORAGE is not set to True in production. "
+        "Set USE_SUPABASE_STORAGE=True in Railway → Variables."
+    )
 
 # ==============================================================================
 # DJANGO CHANNELS
 # ==============================================================================
 
-_redis_url = config('REDIS_URL', default='redis://localhost:6379')
-# Railway sometimes provides rediss:// (SSL). channels_redis needs ssl_cert_reqs=None
-# to connect without verifying the self-signed cert.
+_redis_url = config('REDIS_URL', default='')
+
+if not DEBUG and not _redis_url:
+    raise ImproperlyConfigured(
+        "REDIS_URL environment variable is not set. "
+        "Add it in Railway → Variables (copy from your Redis service → Connect tab)."
+    )
+
+# Local dev fallback when REDIS_URL is not in .env
+if not _redis_url:
+    _redis_url = 'redis://localhost:6379'
+
+# Railway provides rediss:// (TLS). Pass ssl_cert_reqs=None to skip cert
+# verification against Railway's self-signed cert.
 _redis_host = (
     {"address": _redis_url, "ssl_cert_reqs": None}
     if _redis_url.startswith("rediss://")
