@@ -8,6 +8,14 @@ from django.db import models
 from django.conf import settings
 
 
+def get_listings_storage():
+    """Return ListingsStorage in production, None (default) in local dev."""
+    if settings.USE_SUPABASE_STORAGE:
+        from core.storage_backends import ListingsStorage
+        return ListingsStorage()
+    return None
+
+
 class HousingListing(models.Model):
     TYPES = [
         ("chambre", "Room"),
@@ -27,6 +35,7 @@ class HousingListing(models.Model):
     city = models.CharField(max_length=100)
     photo = models.ImageField(
         upload_to="listings/",
+        storage=get_listings_storage,
         blank=True,
         null=True,
         verbose_name="Photo",
@@ -56,7 +65,7 @@ class ListingPhoto(models.Model):
     listing = models.ForeignKey(
         HousingListing, on_delete=models.CASCADE, related_name='photos'
     )
-    image = models.ImageField(upload_to='listings/gallery/')
+    image = models.ImageField(upload_to='listings/gallery/', storage=get_listings_storage)
     ordre = models.PositiveIntegerField(default=0)
 
     class Meta:
