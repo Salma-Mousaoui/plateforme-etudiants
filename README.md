@@ -239,7 +239,7 @@ Haz push a la rama principal. Railway desplegará automáticamente la aplicació
 
 | Nombre | Rol |
 |---|---|
-| Salma Moussaoui | Estudiante — Desarrollo Full Stack |
+| Salma Moussaoui | Estudiante —  Desarrollo de Backend |
 | DIGITECH | Centro de Formación — DAM 2026 |
 
 ---
