@@ -275,3 +275,46 @@ MESSAGE_TAGS = {message_constants.ERROR: 'danger'}
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# ==============================================================================
+# SUPABASE STORAGE (django-storages + boto3 S3 backend)
+# Set USE_SUPABASE_STORAGE=True in .env / Railway to enable cloud storage.
+# ==============================================================================
+
+# Supabase project ref derived from SUPABASE_URL — no extra env var needed
+_SUPABASE_URL = config('SUPABASE_URL', default='')
+SUPABASE_PROJECT_REF = (
+    _SUPABASE_URL
+    .replace('https://', '')
+    .replace('.supabase.co', '')
+)  # → "rnklndklkxjfltlqsijg"
+
+USE_SUPABASE_STORAGE = config('USE_SUPABASE_STORAGE', default=False, cast=bool)
+
+if USE_SUPABASE_STORAGE:
+    # S3 connection — shared by all three storage classes
+    AWS_ACCESS_KEY_ID      = config('SUPABASE_ACCESS_KEY')
+    AWS_SECRET_ACCESS_KEY  = config('SUPABASE_SERVICE_KEY')
+    AWS_S3_ENDPOINT_URL    = config('SUPABASE_S3_ENDPOINT')
+    AWS_S3_REGION_NAME     = 'eu-central-1'
+    AWS_S3_FILE_OVERWRITE  = False
+    AWS_DEFAULT_ACL        = 'public-read'
+    AWS_QUERYSTRING_AUTH   = False
+
+    # Default storage points to listings bucket as fallback
+    STORAGES = {
+        'default': {
+            'BACKEND': 'core.storage_backends.ListingsStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
+else:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }

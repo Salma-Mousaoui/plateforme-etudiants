@@ -9,11 +9,12 @@ from django.conf import settings
 
 
 def get_chat_storage():
-    """Return ChatStorage in production, None (default) in local dev."""
-    if settings.USE_SUPABASE_STORAGE:
+    from django.conf import settings
+    if getattr(settings, 'USE_SUPABASE_STORAGE', False):
         from core.storage_backends import ChatStorage
         return ChatStorage()
-    return None
+    from django.core.files.storage import FileSystemStorage
+    return FileSystemStorage()
 
 
 class ChatGroup(models.Model):

@@ -9,11 +9,12 @@ from django.conf import settings
 
 
 def get_listings_storage():
-    """Return ListingsStorage in production, None (default) in local dev."""
-    if settings.USE_SUPABASE_STORAGE:
+    from django.conf import settings
+    if getattr(settings, 'USE_SUPABASE_STORAGE', False):
         from core.storage_backends import ListingsStorage
         return ListingsStorage()
-    return None
+    from django.core.files.storage import FileSystemStorage
+    return FileSystemStorage()
 
 
 class HousingListing(models.Model):
