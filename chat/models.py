@@ -8,6 +8,15 @@ from django.db import models
 from django.conf import settings
 
 
+def get_chat_storage():
+    from django.conf import settings
+    if getattr(settings, 'USE_SUPABASE_STORAGE', False):
+        from core.storage_backends import ChatStorage
+        return ChatStorage()
+    from django.core.files.storage import FileSystemStorage
+    return FileSystemStorage()
+
+
 class ChatGroup(models.Model):
     """Discussion group by city or topic."""
 
@@ -55,6 +64,7 @@ class Message(models.Model):
     sent_at = models.DateTimeField(auto_now_add=True)
     attachment = models.FileField(
         upload_to='chat_attachments/',
+        storage=get_chat_storage,
         null=True,
         blank=True,
     )

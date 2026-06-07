@@ -5,6 +5,15 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 
+def get_profiles_storage():
+    from django.conf import settings
+    if getattr(settings, 'USE_SUPABASE_STORAGE', False):
+        from core.storage_backends import ProfilesStorage
+        return ProfilesStorage()
+    from django.core.files.storage import FileSystemStorage
+    return FileSystemStorage()
+
+
 class User(AbstractUser):
     """
     Custom user model.
@@ -23,7 +32,12 @@ class User(AbstractUser):
     role         = models.CharField(max_length=20, choices=ROLES, default="student")
     city         = models.CharField(max_length=100, blank=True, verbose_name="City")
     phone        = models.CharField(max_length=30, blank=True, verbose_name="Phone")
-    photo        = models.ImageField(upload_to="profiles/", blank=True, null=True)
+    photo        = models.ImageField(
+        upload_to="profiles/",
+        storage=get_profiles_storage,
+        blank=True,
+        null=True,
+    )
     is_validated = models.BooleanField(
         default=False,
         help_text="True only after admin validation for professional accounts"
