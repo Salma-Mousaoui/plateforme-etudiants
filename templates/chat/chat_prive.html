@@ -481,42 +481,78 @@
 
 {% block extra_js %}
 <script>
-  const ME       = {{ request.user.id }};
-  const OTHER_ID = {{ other_user.id }};
-  const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
-  const wsUrl    = `${wsScheme}://${window.location.host}/ws/chat/prive/${OTHER_ID}/`;
+  const ME         = {{ request.user.id }};
+  const OTHER_ID   = {{ other_user.id }};
+  const UPLOAD_URL = "{% url 'chat-image-upload' %}";
+  const wsScheme   = window.location.protocol === "https:" ? "wss" : "ws";
+  const wsUrl      = `${wsScheme}://${window.location.host}/ws/chat/prive/${OTHER_ID}/`;
 
   let chatSocket;
   let fileSelected = false;
 
-  // ── WebSocket ──────────────────────────────────────────────────────────────
+  // ── WebSocket (exponential backoff reconnect + keepalive) ─────────────────
 
-  function connect() {
+  let reconnectDelay = 3000;
+  const MAX_RECONNECT_DELAY = 30000;
+
+  function connectWebSocket() {
     chatSocket = new WebSocket(wsUrl);
 
     chatSocket.onopen = function () {
+      reconnectDelay = 3000;
       document.getElementById("ws-status").style.display = "none";
+      document.getElementById("message-input").disabled = false;
+      document.getElementById("send-btn").disabled = false;
     };
 
     chatSocket.onmessage = function (e) {
       const data = JSON.parse(e.data);
-      // Skip history_item — Django already rendered those on page load
+
+      // History is already rendered server-side on page load — discard.
       if (data.type === "history_item") return;
-      appendMessage(data.message, data.sender_id, data.sent_at, data.is_read ?? false, null);
+
+      // Server-side size guard fired — show the user why their send failed.
+      if (data.type === "error") {
+        alert(data.message);
+        return;
+      }
+
+      if (data.msg_type === "image_url") {
+        // Only the URL travels through Redis — render it as an <img> locally.
+        const safeUrl = esc(data.url);
+        const imgHtml = `<a href="${safeUrl}" target="_blank" rel="noopener">
+                           <img src="${safeUrl}" class="msg-attachment-img" alt="image">
+                         </a>`;
+        appendMessage("", data.sender_id, data.sent_at, false, imgHtml);
+      } else {
+        appendMessage(data.message, data.sender_id, data.sent_at, data.is_read ?? false, null);
+      }
+
       scrollToBottom();
     };
 
-    chatSocket.onerror = function (err) {
-      console.error("WebSocket error:", err);
+    chatSocket.onerror = function () {
+      chatSocket.close();
     };
 
     chatSocket.onclose = function () {
       document.getElementById("ws-status").style.display = "block";
-      setTimeout(connect, 3000);
+      document.getElementById("message-input").disabled = true;
+      setTimeout(connectWebSocket, reconnectDelay);
+      reconnectDelay = Math.min(reconnectDelay * 1.5, MAX_RECONNECT_DELAY);
     };
   }
 
-  connect();
+  connectWebSocket();
+
+  // ── Keepalive ping ─────────────────────────────────────────────────────────
+  // Railway drops idle WebSocket connections after ~55 s. A lightweight ping
+  // every 30 s keeps the connection open without sending chat traffic.
+  setInterval(function () {
+    if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+      chatSocket.send(JSON.stringify({ type: "ping" }));
+    }
+  }, 30000);
 
   // ── File attachment ────────────────────────────────────────────────────────
 
@@ -551,10 +587,16 @@
 
   function sendMessage() {
     if (fileSelected) {
-      // Submit form via POST (handles file + optional text)
-      document.getElementById("file-content-hidden").value =
-        document.getElementById("message-input").value.trim();
-      document.getElementById("file-form").submit();
+      const file = document.getElementById("file-input").files[0];
+      if (file && file.type.startsWith("image/")) {
+        // Images → HTTP upload → WebSocket URL broadcast (never binary through Redis).
+        uploadAndSendImage(file);
+      } else {
+        // Non-image attachments (PDF, DOCX …) still use the existing form POST.
+        document.getElementById("file-content-hidden").value =
+          document.getElementById("message-input").value.trim();
+        document.getElementById("file-form").submit();
+      }
       return;
     }
 
@@ -563,17 +605,65 @@
     if (!msg) return;
 
     if (chatSocket.readyState !== WebSocket.OPEN) {
-      alert("Connection lost, please wait…");
+      document.getElementById("ws-status").style.display = "block";
       return;
     }
 
-    chatSocket.send(JSON.stringify({ message: msg, sender_id: ME }));
-    // OPTION A : le consumer rebroadcast à tous les membres y compris l'expéditeur.
-    // L'affichage est géré uniquement par onmessage pour éviter le double affichage.
+    chatSocket.send(JSON.stringify({ type: "text", message: msg, sender_id: ME }));
     input.value = "";
   }
 
+  // ── Image upload via HTTP fetch, then broadcast URL over WebSocket ─────────
+
+  async function uploadAndSendImage(file) {
+    const sendBtn    = document.getElementById("send-btn");
+    const previewBar = document.getElementById("file-preview-bar");
+
+    sendBtn.disabled    = true;
+    previewBar.textContent = "⏳ Uploading…";
+    previewBar.style.display = "block";
+
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("other_user_id", OTHER_ID);
+
+    try {
+      const resp = await fetch(UPLOAD_URL, {
+        method: "POST",
+        headers: { "X-CSRFToken": getCsrfToken() },
+        body: formData,
+      });
+
+      const data = await resp.json();
+
+      if (data.success) {
+        if (chatSocket.readyState === WebSocket.OPEN) {
+          // Only the URL string reaches Redis — never the file bytes.
+          chatSocket.send(JSON.stringify({ type: "image_url", url: data.url }));
+        }
+        fileSelected = false;
+        document.getElementById("file-input").value = "";
+        previewBar.style.display = "none";
+        document.getElementById("message-input").value = "";
+      } else {
+        previewBar.style.display = "none";
+        alert("Upload failed: " + (data.error || "Unknown error."));
+      }
+    } catch (err) {
+      previewBar.style.display = "none";
+      console.error("Image upload error:", err);
+      alert("Upload failed. Please check your connection and try again.");
+    } finally {
+      sendBtn.disabled = false;
+    }
+  }
+
   // ── Helpers ────────────────────────────────────────────────────────────────
+
+  function getCsrfToken() {
+    const el = document.querySelector("[name=csrfmiddlewaretoken]");
+    return el ? el.value : "";
+  }
 
   function appendMessage(content, senderId, time, isRead, attachmentHtml) {
     const isMe = senderId === ME;
@@ -613,10 +703,6 @@
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
-  }
-
-  function now() {
-    return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
   }
 
   scrollToBottom();

@@ -10,6 +10,11 @@ from .models import ChatGroup, Message
 
 User = get_user_model()
 
+# Redis is a pub/sub bus, not a file transfer protocol.
+# Keeping payloads under 512 KB ensures we never hit the channel layer's
+# default capacity limit and prevents accidental binary blobs from reaching Redis.
+MAX_WS_PAYLOAD = 512 * 1024  # 512 KB
+
 
 class PrivateChatConsumer(AsyncWebsocketConsumer):
 
@@ -42,29 +47,56 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
                 pass
 
     async def receive(self, text_data):
+        # Hard-reject oversized payloads before they touch Redis.
+        if len(text_data.encode("utf-8")) > MAX_WS_PAYLOAD:
+            await self.send(text_data=json.dumps({
+                "type": "error",
+                "message": "Message too large. Please upload images using the attachment button.",
+            }))
+            return
+
         try:
             data = json.loads(text_data)
         except (json.JSONDecodeError, ValueError):
             return
 
-        content = data.get("message", "").strip()
-        if not content:
+        msg_type = data.get("type", "text")
+
+        if msg_type == "ping":
             return
 
         user = self.scope["user"]
 
-        msg = await self.save_message(user, self.other_user_id, content)
-        if msg is None:
-            return
-
-        await self.channel_layer.group_send(self.room_name, {
-            "type": "chat_message",
-            "message": content,
-            "sender_id": user.id,
-            "sender_name": user.get_full_name() or user.username,
-            "sent_at": datetime.now().strftime("%H:%M"),
-            "is_read": False,
-        })
+        if msg_type == "image_url":
+            url = data.get("url", "").strip()
+            if not url:
+                return
+            # The Message record was already created by ChatImageUploadView
+            # (HTTP POST). The consumer's only job here is real-time delivery.
+            await self.channel_layer.group_send(self.room_name, {
+                "type": "chat_message",
+                "msg_type": "image_url",
+                "url": url,
+                "sender_id": user.id,
+                "sender_name": user.get_full_name() or user.username,
+                "sent_at": datetime.now().strftime("%H:%M"),
+            })
+        else:
+            content = data.get("message", "").strip()
+            if not content:
+                return
+            msg = await self.save_message(user, self.other_user_id, content)
+            if msg is None:
+                return
+            await self.channel_layer.group_send(self.room_name, {
+                "type": "chat_message",
+                "msg_type": "text",
+                "message": content,
+                "sender_id": user.id,
+                "sender_name": user.get_full_name() or user.username,
+                "sent_at": datetime.now().strftime("%H:%M"),
+                "is_read": False,
+            })
 
     async def chat_message(self, event):
         await self.send(text_data=json.dumps(event))
@@ -135,9 +167,19 @@ class GroupChatConsumer(AsyncWebsocketConsumer):
                 pass
 
     async def receive(self, text_data):
+        if len(text_data.encode("utf-8")) > MAX_WS_PAYLOAD:
+            await self.send(text_data=json.dumps({
+                "type": "error",
+                "message": "Message too large. Please upload images using the attachment button.",
+            }))
+            return
+
         try:
             data = json.loads(text_data)
         except (json.JSONDecodeError, ValueError):
+            return
+
+        if data.get("type") == "ping":
             return
 
         content = data.get("message", "").strip()
@@ -152,6 +194,7 @@ class GroupChatConsumer(AsyncWebsocketConsumer):
 
         await self.channel_layer.group_send(self.room_name, {
             "type": "chat_message",
+            "msg_type": "text",
             "message": content,
             "sender_id": user.id,
             "sender_name": user.get_full_name() or user.username,

@@ -9,5 +9,5 @@ pillow
 whitenoise>=6.0
 dj-database-url
 faker
-django-storages[s3]
-boto3
+django-storages[s3]>=1.14
+boto3>=1.34

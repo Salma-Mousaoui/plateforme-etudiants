@@ -3,10 +3,10 @@ Django settings for plateforme_etudiants project.
 Python 3.11, Django 6.x, PostgreSQL (Supabase), Redis, Django Channels 4.x
 """
 
-import os
 from pathlib import Path
 from decouple import config
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -147,19 +147,89 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # ==============================================================================
-# MEDIA FILES (Uploads)
+# MEDIA FILES + SUPABASE STORAGE (S3-compatible)
+# Dev  (USE_SUPABASE_STORAGE=False): FileSystemStorage → local MEDIA_ROOT
+# Prod (USE_SUPABASE_STORAGE=True):  per-bucket S3Boto3Storage backends
+#   Buckets (already exist in Supabase, both PUBLIC):
+#     'listings'  ← housing listing photos     (core.storage_backends.ListingsStorage)
+#     'profiles'  ← user profile pictures      (core.storage_backends.ProfilesStorage)
+#     'chat'      ← chat image attachments     (core.storage_backends.ChatStorage)
 # ==============================================================================
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Extract the Supabase project ref (e.g. 'rnklndklkxjfltlqsijg') from the
+# full URL so the storage backends can build their public custom_domain values.
+SUPABASE_URL = config('SUPABASE_URL', default='')
+SUPABASE_PROJECT_REF = SUPABASE_URL.replace('https://', '').replace('.supabase.co', '')
+
+USE_SUPABASE_STORAGE = config('USE_SUPABASE_STORAGE', default=False, cast=bool)
+
+if USE_SUPABASE_STORAGE:
+    # Shared S3 connection settings consumed by every storage backend.
+    AWS_ACCESS_KEY_ID     = config('SUPABASE_ACCESS_KEY')
+    AWS_SECRET_ACCESS_KEY = config('SUPABASE_SERVICE_KEY')
+    AWS_S3_ENDPOINT_URL   = config('SUPABASE_S3_ENDPOINT')
+    AWS_S3_REGION_NAME    = config('SUPABASE_REGION', default='eu-central-1')
+    AWS_QUERYSTRING_AUTH  = False  # never sign URLs — all buckets are public
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL       = 'public-read'
+
+    # Default storage fallback (points to the 'listings' bucket).
+    # All model fields override this with their own per-bucket backend.
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
+            'OPTIONS': {
+                'bucket_name': 'listings',
+                'querystring_auth': False,
+                'file_overwrite': False,
+                'custom_domain': (
+                    f"{SUPABASE_PROJECT_REF}"
+                    f".supabase.co/storage/v1/object/public/listings"
+                ),
+            },
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
+
+elif not DEBUG:
+    raise ImproperlyConfigured(
+        "USE_SUPABASE_STORAGE is not set to True in production. "
+        "Set USE_SUPABASE_STORAGE=True in Railway → Variables."
+    )
+
+else:
+    # Local development: serve media from the filesystem.
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 # ==============================================================================
 # DJANGO CHANNELS
 # ==============================================================================
 
-_redis_url = config('REDIS_URL', default='redis://localhost:6379')
-# Railway sometimes provides rediss:// (SSL). channels_redis needs ssl_cert_reqs=None
-# to connect without verifying the self-signed cert.
+_redis_url = config('REDIS_URL', default='')
+
+if not DEBUG and not _redis_url:
+    raise ImproperlyConfigured(
+        "REDIS_URL environment variable is not set. "
+        "Add it in Railway → Variables (copy from your Redis service → Connect tab)."
+    )
+
+# Local dev fallback when REDIS_URL is not in .env
+if not _redis_url:
+    _redis_url = 'redis://localhost:6379'
+
+# Railway provides rediss:// (TLS). Pass ssl_cert_reqs=None to skip cert
+# verification against Railway's self-signed cert.
 _redis_host = (
     {"address": _redis_url, "ssl_cert_reqs": None}
     if _redis_url.startswith("rediss://")
@@ -171,6 +241,11 @@ CHANNEL_LAYERS = {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
             'hosts': [_redis_host],
+            # capacity: max messages queued per channel before back-pressure kicks in.
+            # expiry: seconds before an unread message is dropped from the queue.
+            # Both prevent Redis memory from growing unbounded if a consumer is slow.
+            'capacity': 1500,
+            'expiry': 10,
         },
     },
 }

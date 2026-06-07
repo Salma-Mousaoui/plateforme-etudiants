@@ -1,10 +1,66 @@
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views import View
 
 from .models import ChatGroup, Message
+
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB
+
+
+class ChatImageUploadView(LoginRequiredMixin, View):
+    """
+    Accepts a multipart POST with an image file.
+    Saves it via the configured storage backend (Supabase S3 in production)
+    and returns the public URL as JSON.
+
+    The caller (browser) is responsible for then sending that URL over the
+    WebSocket so Redis only ever carries a short string, never binary data.
+    """
+    raise_exception = True  # return 403 for unauthenticated AJAX, not a redirect
+
+    def post(self, request, *args, **kwargs):
+        image = request.FILES.get("image")
+
+        if not image:
+            return JsonResponse(
+                {"success": False, "error": "No image provided."}, status=400
+            )
+
+        if image.content_type not in ALLOWED_IMAGE_TYPES:
+            return JsonResponse(
+                {"success": False, "error": "Only JPEG, PNG, GIF and WebP are accepted."},
+                status=400,
+            )
+
+        if image.size > MAX_IMAGE_BYTES:
+            return JsonResponse(
+                {"success": False, "error": "Image exceeds the 5 MB limit."},
+                status=400,
+            )
+
+        other_user_id = request.POST.get("other_user_id")
+        receiver = None
+        if other_user_id:
+            try:
+                receiver = get_object_or_404(
+                    get_user_model(), pk=int(other_user_id)
+                )
+            except (ValueError, TypeError):
+                return JsonResponse(
+                    {"success": False, "error": "Invalid other_user_id."}, status=400
+                )
+
+        msg = Message(sender=request.user, content="", receiver=receiver)
+        msg.attachment = image
+        msg.save()
+
+        return JsonResponse({"success": True, "url": msg.attachment.url})
 
 User = get_user_model()
 
